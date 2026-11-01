@@ -243,6 +243,7 @@ function detectPeriod(text){
 const OPEN_RE=/(saldo\s*awal|opening\s*balance|saldo\s*sebelumnya|beginning\s*balance|previous\s*balance|saldo\s*pembukaan)/i;
 const CLOSE_RE=/(saldo\s*akhir|closing\s*balance|ending\s*balance|saldo\s*penutupan)/i;
 const STOP_RE=/^(mutasi\s*(cr|db|kredit|debet)|total|jumlah\s*(mutasi|transaksi|debet|kredit)|halaman|page\s*\d|bersambung|continued|catatan|informasi|apabila|ringkasan|summary)/i;
+const FOOT_RE=/^\d{2}\/\d{2}\/\d{4}\s+\d{1,2}:\d{2}(:\d{2})?(\s*[AP]M)?\s*$/i;
 function isHeader(t){ return /\b(tanggal|tgl|date|posting)\b/i.test(t)&&/\b(saldo|balance)\b/i.test(t)&&!/\d{1,3}[.,]\d{3}/.test(t); }
 function headerCols(L){
   const c={};
@@ -263,7 +264,7 @@ function parseStatement(lines,name){
     if(isHeader(t)){ close(); if(!L.paste) cols=headerCols(L); continue; }
     if(OPEN_RE.test(t)){ close(); const mt=moneyTokens(L); if(mt.length){ if(opening==null) opening=mt[mt.length-1].v*(mt[mt.length-1].sign<0?-1:1); } else pendingSum=true; continue; }
     if(CLOSE_RE.test(t)){ close(); const mt=moneyTokens(L); if(mt.length) closing=mt[mt.length-1].v; continue; }
-    if(STOP_RE.test(t)){ close(); continue; }
+    if(STOP_RE.test(t)||FOOT_RE.test(t)){ close(); continue; }
     const d=dateAtStart(t,per.year,per.month);
     if(d){ close(); cur={date:d.iso,dlen:d.len,lines:[L],page:L.page,cols}; continue; }
     if(cur&&L.page===cur.page&&cur.lines.length<6) cur.lines.push(L);
@@ -279,7 +280,8 @@ function parseStatement(lines,name){
     const used=new Set(); money.forEach(m=>{used.add(m.line.tokens[m.i]); if(m.mark){const n=m.line.tokens[m.i+1]; if(n&&/^(DB|CR|D|K)$/i.test(n.s)) used.add(n);} const p=m.line.tokens[m.i-1]; if(p&&/^[+-](Rp\.?)?$|^Rp\.?$/.test(p.s)) used.add(p);});
     const words=[];
     b.lines.forEach((L,li)=>{ let consumed=0; for(const k of L.tokens){ if(li===0&&consumed<b.dlen){consumed+=k.s.length+1;continue;} if(used.has(k)) continue; if(/^\d{1,2}[:.]\d{2}([:.]\d{2})?$/.test(k.s)||/^WIB$/i.test(k.s)||k.s==='-') continue; if(MONEY_RE.test(k.s)&&!b.lines[0].paste) continue; words.push(k.s);} });
-    const desc=words.join(' ').replace(/\s+/g,' ').trim().slice(0,160)||'(tanpa keterangan)';
+    const clean=words.filter(w=>!/^ESB:/i.test(w)&&!/^\d{7}$/.test(w));
+    const desc=(clean.length?clean:words).join(' ').replace(/\s+/g,' ').trim().slice(0,160)||'(tanpa keterangan)';
     let amt=null,dir=null,bal=null,review=false;
     const c=b.cols;
     if(c&&(c.dr!=null||c.cr!=null)&&money.length){
@@ -301,7 +303,9 @@ function parseStatement(lines,name){
     txns.push({date:b.date,desc,amount:Math.round(amt*100)/100,dir,bal,review});
   }
   if(closing==null&&txns.length) closing=prev;
-  return {bank,last4,opening,closing,txns,name};
+  let pfrom=null,pto=null; const pm2=all.match(/periode[^\n]{0,40}?(\d{1,2}[\s\/\-.][A-Za-z0-9]{2,9}[\s\/\-.]\d{2,4})\s*(?:-|s\.?\s?d\.?|sampai|to)\s*(\d{1,2}[\s\/\-.][A-Za-z0-9]{2,9}[\s\/\-.]\d{2,4})/i);
+  if(pm2){ const a=dateAtStart(pm2[1],per.year,per.month), b=dateAtStart(pm2[2],per.year,per.month); if(a&&b&&a.iso<=b.iso){pfrom=a.iso;pto=b.iso;} }
+  return {bank,last4,opening,closing,txns,name,pfrom,pto};
 }
 function linesFromText(text){
   const raw=text.split(/\r?\n/); const w=Math.max(40,...raw.map(s=>s.length));
@@ -341,14 +345,14 @@ async function pdfLines(file,password){
 /* ---------- Chart of accounts ---------- */
 const BASE=[
  ['1-101','Kas Tunai','A','cash'],['1-120','Dompet Digital (GoPay, OVO, DANA, dll.)','A','cash'],['1-190','Transfer Antar Rekening (Kliring)','A','cash'],
- ['1-201','Piutang kepada Pihak Lain','A','inv'],['1-301','Investasi (Reksa Dana, Saham, Emas, SBN)','A','inv'],['1-401','Aset Tetap (Kendaraan, Elektronik, Properti)','A','inv'],
+ ['1-199','Suspen — Selisih Kesinambungan Saldo Bank','A','cash'],['1-201','Piutang kepada Pihak Lain','A','inv'],['1-301','Investasi (Reksa Dana, Saham, Emas, SBN)','A','inv'],['1-401','Aset Tetap (Kendaraan, Elektronik, Properti)','A','inv'],
  ['2-101','Utang Kartu Kredit & Paylater','L','fin'],['2-201','Utang Pinjaman & Cicilan','L','fin'],
  ['3-101','Ekuitas Awal','E','fin'],
- ['4-101','Gaji, Tunjangan & TPP','R','op'],['4-102','Honorarium, Uang Harian & Penghasilan Lain','R','op'],['4-201','Bunga & Bagi Hasil Bank','R','op'],['4-202','Dividen & Imbal Hasil Investasi','R','op'],['4-301','Cashback, Hadiah & Refund','R','op'],['4-399','Penerimaan Lain-lain','R','op'],
+ ['4-101','Gaji, Tunjangan & THP','R','op'],['4-102','Honorarium, Uang Harian & Penghasilan Lain','R','op'],['4-201','Bunga & Bagi Hasil Bank','R','op'],['4-202','Dividen & Imbal Hasil Investasi','R','op'],['4-301','Cashback, Hadiah & Refund','R','op'],['4-399','Penerimaan Lain-lain','R','op'],
  ['5-101','Makan & Minum','X','op'],['5-102','Belanja Kebutuhan Rumah Tangga','X','op'],['5-201','Transportasi & BBM','X','op'],['5-202','Perjalanan & Akomodasi','X','op'],
  ['5-301','Listrik, Air & Internet','X','op'],['5-302','Pulsa & Paket Data','X','op'],['5-303','Sewa & Tempat Tinggal','X','op'],
  ['5-401','Kesehatan','X','op'],['5-402','Asuransi','X','op'],['5-403','Pendidikan & Pengembangan Diri','X','op'],
- ['5-501','Hiburan & Langganan Digital','X','op'],['5-502','Belanja Pribadi & Online','X','op'],
+ ['5-501','Hiburan & Langganan Digital','X','op'],['5-502','Belanja Pribadi & Online','X','op'],['5-503','Belanja QRIS & Kartu Debit (belum dirinci)','X','op'],
  ['5-601','Zakat, Infak & Donasi','X','op'],['5-602','Kiriman & Dukungan Keluarga','X','op'],
  ['5-701','Biaya Administrasi Bank','X','op'],['5-702','Pajak','X','op'],['5-703','Beban Bunga Pinjaman','X','op'],['5-999','Pengeluaran Lain-lain','X','op']
 ];
@@ -368,15 +372,18 @@ const isCash=c=>AC(c).cf==='cash';
 
 /* ---------- Auto category rules ---------- */
 const RULES=[
+ [/\bSPAN\b|\bSP2D\b|SALARY CREDITING|\bKPPN\b/,'4-101','in'],
  [/\b(PAJAK|TAX|DJP|MPN|PBB|SAMSAT|PKB|PPH)\b/,'5-702','out'],
  [/\b(DIVIDEN|DIVIDEND|KUPON)\b/,'4-202','in'],
  [/\b(BIAYA ADM|BIAYA ADMIN|BY ADM|BIAYA TXN|BIAYA TRANSFER|ADM FEE|ADMIN FEE|MONTHLY FEE|BIAYA KARTU|BIAYA MATERAI|BIAYA ADMINISTRASI|ADM BULANAN|BIAYA)\b/,'5-701','out'],
  [/\b(TARIKAN ATM|TARIK TUNAI|TARIKAN TUNAI|PENARIKAN|ATM WD|CASH WITHDRAWAL|TARIK ATM|TRK TUNAI|CARDLESS)\b/,'1-101','out'],
  [/\b(SETORAN TUNAI|SETOR TUNAI|CASH DEPOSIT|STR TUNAI|SETORAN)\b/,'1-101','in'],
- [/\b(GOPAY|GO-PAY|OVO|SHOPEEPAY|SHOPEE PAY|LINKAJA|LINK AJA|TOP ?UP|TOPUP|ISAKU|DANA TOPUP|TOPUP DANA|DANA ID)\b/,'1-120','out'],
+ [/^\s(0\d{9,12}\s+\d{8}\s+\d{12}|5\d{15,23})\b/,'1-101','out'],
+ [/\b(GOP01|GOPAY|GO-PAY|OVO|SHOPEEPAY|SHOPEE PAY|LINKAJA|LINK AJA|TOP ?UP|TOPUP|ISAKU|DANA TOPUP|TOPUP DANA|DANA ID)\b/,'1-120','out'],
  [/\b(BIBIT|AJAIB|BAREKSA|STOCKBIT|IPOT|INDO PREMIER|RDN|REKSA ?DANA|PLUANG|PEGADAIAN|TABUNGAN EMAS|TANAMDUIT|SBN|SUKUK|MIRAE|SEKURITAS|KSEI|ORI\d*|SBR\d*)\b/,'1-301',null],
  [/\b(KARTU KREDIT|CREDIT CARD|KREDIVO|AKULAKU|PAYLATER|SPAYLATER|INDODANA|ATOME|TAGIHAN KK)\b/,'2-101','out'],
  [/\b(KPR|CICILAN|ANGSURAN|KREDIT MOTOR|KREDIT MOBIL|ADIRA|FIF|BAF|WOM|HOME CREDIT|PINJAMAN|KUR)\b/,'2-201',null],
+ [/(\b|\d)SPD\b/,'4-102','in'],
  [/\b(GAJI|PAYROLL|SALARY|SP2D|KPPN|TUNJANGAN|TUNJ|TPP|THR|UANG MAKAN|REMUN|REMUNERASI)\b/,'4-101','in'],
  [/\b(HONOR|HONORARIUM|UANG HARIAN|SPPD|PERJADIN|LUMPSUM|NARASUMBER|INSENTIF|UANG TRANSPORT|REIMBURSE)\b/,'4-102','in'],
  [/\b(BUNGA|INTEREST|BAGI HASIL|JASA GIRO|NISBAH)\b/,'4-201','in'],
@@ -394,16 +401,24 @@ const RULES=[
  [/\b(TRAVELOKA|TIKET\.COM|PEGIPEGI|AGODA|AIRBNB|HOTEL|GARUDA|CITILINK|LION|BATIK AIR|AIRASIA|PELNI|KAI|KERETA)\b/,'5-202','out'],
  [/\b(GRAB|GOJEK|GORIDE|GOCAR|GO-RIDE|MAXIM|INDRIVER|BLUEBIRD|BLUE BIRD|PERTAMINA|SPBU|SHELL|TOL|E-TOLL|ETOLL|FLAZZ|BRIZZI|E-MONEY|EMONEY|TAPCASH|PARKIR|KRL|MRT|LRT|TRANSJAKARTA|BENGKEL)\b/,'5-201','out'],
  [/\b(TOKOPEDIA|SHOPEE|LAZADA|BLIBLI|BUKALAPAK|ZALORA|TIKTOK|UNIQLO|MATAHARI|SOCIOLLA|ERAFONE|IBOX)\b/,'5-502','out'],
+ [/NBMBTKP/,'5-502','out'],
+ [/\b(BAYAR QRIS|QRIS\d*|PRCH\d*|PEMBAYARAN MERCHANT)|VIA EDC/,'5-503','out'],
  [/\b(KIRIMAN|ORTU|ORANG TUA|IBU|BAPAK|AYAH|ADIK|KAKAK|ISTRI|SUAMI|KELUARGA|MAMA|PAPA)\b/,'5-602','out']
 ];
 const STOPW=new Set(['TRSF','BANKING','EBANKING','TRANSFER','DARI','BIF','SWITCHING','QRIS','PAYMENT','PEMBAYARAN','BAYAR','KARTU','DEBIT','KREDIT','TRX','TRANSAKSI','FAST','BIFAST','ONLINE','VIA','MOBILE','TGL','REF','THE','TBK','ANTAR','BANK','REK','INTERNET','LIVIN','BRIMO','MYBCA','KLIKBCA','POS','EDC','PURCHASE','DEBET','MASUK','KELUAR','NBMB','BRIVA','TANPA','KETERANGAN']);
 function descKey(d){ return d.toUpperCase().replace(/[^A-Z ]/g,' ').split(/\s+/).filter(w=>w.length>=3&&!STOPW.has(w)).slice(0,3).join(' '); }
+function otherParty(D,dir){ let m;
+  if((m=D.match(/FROM\s*([A-Z][A-Z .]+?)\s+(LA\b|TO\b|$)/))&&dir==='in') return m[1];
+  if((m=D.match(/^\s*(?:NBMB\s+)?(.+?)\s+TO\s+(.+)$/))) return dir==='in'?m[1]:m[2];
+  if((m=D.match(/TRANSFER\s+(DARI|KE)\s+(.+?)(\s+VIA\b|$)/))) return m[2];
+  return D; }
 function autoCat(t){
   const k=descKey(t.desc);
   if(k){ const r=S.rules.find(r=>r.key===k&&r.dir===t.dir); if(r) return [r.cat,'rule',false]; }
   const D=' '+t.desc.toUpperCase()+' ';
+  if(t.dir==='out'&&Math.abs(t.amount-2500)<0.5&&/BFST|BI-?FAST/.test(D)) return ['5-701','auto',false];
   for(const [re,cat,dir] of RULES){ if(dir&&dir!==t.dir) continue; if(re.test(D)) return [cat,'auto',false]; }
-  if(S.owner){ const parts=S.owner.toUpperCase().split(/\s+/).filter(w=>w.length>=3); if(parts.length&&parts.some(p=>new RegExp('\\b'+p.replace(/[^A-Z]/g,'')+'\\b').test(D))) return ['1-190','auto',false]; }
+  if(S.owner&&!/BRIVA/.test(D)){ const parts=S.owner.toUpperCase().split(/\s+/).map(w=>w.replace(/[^A-Z]/g,'')).filter(w=>w.length>=3); const P=otherParty(D,t.dir); if(parts.length&&parts.some(p=>new RegExp('(\\b|\\d)'+p+'\\b').test(P))) return ['1-190','auto',false]; }
   return [t.dir==='in'?'4-399':'5-999','default',true];
 }
 function pairTransfers(){
@@ -472,10 +487,11 @@ function makeSample(){
 let S=load()||makeSample();
 function categorizeAll(only){ for(const t of S.txns){ if(t.src==='user'||t.src==='pair') continue; if(only&&!only.has(t.id)) continue; const [c,src,rv]=autoCat(t); t.cat=c; t.src=src; t.review=rv||t.parseReview||false; } }
 if(S.sample&&!S.txns[0].cat){ categorizeAll(); pairTransfers(); }
+else if(!S.sample&&S.txns.length){ categorizeAll(); pairTransfers(); save(); }
 
 /* ---------- Ledger engine ---------- */
 let _ent=null;
-function changed(){ _ent=null; _acc=null; save(); }
+function changed(){ _ent=null; _acc=null; _gaps=null; save(); }
 function dataRange(){ let a=null,b=null; for(const t of S.txns){ if(!a||t.date<a)a=t.date; if(!b||t.date>b)b=t.date; } for(const m of S.manual){ if(!a||m.date<a)a=m.date; if(!b||m.date>b)b=m.date; } return [a,b]; }
 function bankOpening(b){
   const tx=S.txns.filter(t=>t.acct===b.id).sort((x,y)=>x.date<y.date?-1:1); if(!tx.length) return null;
@@ -485,10 +501,20 @@ function bankOpening(b){
   let run=0; for(const t of tx){ run+=t.dir==='in'?t.amount:-t.amount; if(t.bal!=null) return {date:fd,amount:Math.round((t.bal-run)*100)/100}; }
   return {date:fd,amount:0};
 }
+let _gaps=null;
+function gaps(){ if(_gaps) return _gaps; const out=[];
+  S.banks.forEach((b,i)=>{ const o=bankOpening(b); if(!o) return; const code=bankCodeOf(i);
+    const tx=S.txns.filter(t=>t.acct===b.id); const st=S.statements.filter(s=>s.acct===b.id&&s.opening!=null&&s.from).sort((x,y)=>x.from<y.from?-1:x.from>y.from?1:0);
+    let adj=0;
+    st.forEach((s,k)=>{ if(k===0) return; let bal=o.amount+adj; for(const t of tx) if(t.date<s.from) bal+=t.dir==='in'?t.amount:-t.amount;
+      const d=Math.round((s.opening-bal)*100)/100; if(Math.abs(d)>=1){ const prev=st.slice(0,k).reduce((a,x)=>(!a||x.to>a.to)?x:a,null); out.push({code,label:AC(code).name,date:s.from,diff:d,window:(prev?fshort(addDays(prev.to,1)):'')+' – '+fshort(addDays(s.from,-1))+' '+s.from.slice(0,4)}); adj+=d; } });
+  });
+  return _gaps=out; }
 function ENT(){
   if(_ent) return _ent; const E=[];
   S.banks.forEach((b,i)=>{ const o=bankOpening(b); if(!o||!o.amount) return; const c=bankCodeOf(i),v=o.amount;
     E.push({date:o.date,ord:0,desc:'Saldo awal '+AC(c).name,src:'open',lines:v>0?[{a:c,dr:v,cr:0},{a:'3-101',dr:0,cr:v}]:[{a:'3-101',dr:-v,cr:0},{a:c,dr:0,cr:-v}]}); });
+  for(const g of gaps()) E.push({date:g.date,ord:0.5,desc:'Penyesuaian kesinambungan saldo '+g.label+' (transaksi '+g.window+' belum terunggah)',src:'adj',lines:g.diff>0?[{a:g.code,dr:g.diff,cr:0},{a:'1-199',dr:0,cr:g.diff}]:[{a:'1-199',dr:-g.diff,cr:0},{a:g.code,dr:0,cr:-g.diff}]});
   const od=S.openDate||dataRange()[0];
   if(od) for(const [c,v0] of Object.entries(S.openings||{})){ const v=Math.abs(+v0||0); if(!v) continue; const t=AC(c).type;
     E.push({date:od,ord:0,desc:'Saldo awal '+AC(c).name,src:'open',lines:(t==='A')?[{a:c,dr:v,cr:0},{a:'3-101',dr:0,cr:v}]:[{a:'3-101',dr:v,cr:0},{a:c,dr:0,cr:v}]}); }
@@ -598,10 +624,11 @@ function vRingkasan(){
   const rv=S.txns.filter(t=>t.review).length;
   const recon=S.statements.filter(x=>x.recon==='selisih');
   const kl=nv(balAt(e),'1-190');
-  const neg=ACCTS().list.filter(a=>(a.type==='A'||a.type==='L')&&a.code!=='1-190'&&nv(balAt(e),a.code)<-1);
+  const neg=ACCTS().list.filter(a=>(a.type==='A'||a.type==='L')&&a.code!=='1-190'&&a.code!=='1-199'&&nv(balAt(e),a.code)<-1);
   const al=[];
   if(rv) al.push(['var(--warn)',`${rv} transaksi masuk kategori bawaan dan perlu dicek. <a href="#transaksi" data-act="rvfilter">Tinjau</a>`]);
   recon.forEach(x=>al.push(['var(--out)',`Rekening koran “${esc(x.name)}” tidak rekonsiliasi: selisih Rp ${rp(x.diff)}.`]));
+  gaps().forEach(g=>al.push(['var(--out)',`${esc(g.label)}: saldo awal rekening koran ${fdate(g.date)} tidak menyambung dengan rekening koran sebelumnya (selisih Rp ${rp(g.diff)}). Kemungkinan transaksi ${esc(g.window)} belum terunggah. Selisih sementara dicatat di akun Suspen; unggah rekening koran periode itu untuk menghapusnya.`]));
   if(Math.abs(kl)>1) al.push(['var(--accent)',`Akun kliring transfer bersaldo Rp ${rp(kl)}. Ada transfer antar rekening yang pasangannya belum diunggah.`]);
   neg.forEach(a=>al.push(['var(--out)',`${esc(a.name)} bersaldo negatif per ${fdate(e)}. Periksa saldo awal atau kategori transaksinya.`]));
   if(!al.length) al.push(['var(--in)','Semua transaksi sudah berkategori dan rekening koran rekonsiliasi.']);
@@ -918,7 +945,7 @@ function ingest(res,label4,bankOverride){
   for(const t of res.txns){ const o={id:uid(),date:t.date,acct:id,desc:t.desc,amount:t.amount,dir:t.dir,bal:t.bal,stmt:sid,parseReview:t.review}; if(have.has(sig(o))) continue; have.add(sig(o)); S.txns.push(o); fresh.add(o.id); n++; if(o.dir==='in') tin+=o.amount; else tout+=o.amount; }
   const ds=res.txns.map(t=>t.date).sort();
   let recon='n/a',diff=0; if(res.opening!=null&&res.closing!=null){ const all=res.txns.reduce((a,t)=>a+(t.dir==='in'?t.amount:-t.amount),0); diff=Math.round((res.opening+all-res.closing)*100)/100; recon=Math.abs(diff)<1?'ok':'selisih'; }
-  S.statements.push({id:sid,name:res.name,bank,last4,acct:id,opening:res.opening,closing:res.closing,from:ds[0],to:ds[ds.length-1],count:n,tin,tout,recon,diff});
+  S.statements.push({id:sid,name:res.name,bank,last4,acct:id,opening:res.opening,closing:res.closing,from:res.pfrom||ds[0],to:res.pto||ds[ds.length-1],count:n,tin,tout,recon,diff});
   S.txns.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
   _acc=null; categorizeAll(fresh); const p=pairTransfers(); changed();
   toast(`${res.name}: ${n} transaksi baru dicatat${res.txns.length-n?`, ${res.txns.length-n} duplikat dilewati`:''}${p?`, ${p} pasangan transfer dikenali`:''}.`);
