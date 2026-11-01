@@ -8,175 +8,302 @@
 <title>Dana e-Statement</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* Layout: kertas kolom akuntan — sidebar navigasi, lembar laporan di kanan, garis tunggal/ganda untuk subtotal & total */
+/* Layout: bingkai hitam berisi rail ikon + kanvas putih membulat; kartu rekening hitam/putih; statistik & kategori beraksen pastel */
 :root{
-  --paper:#EBEFEA; --sheet:#F9FBF8; --ink:#16231D; --ink-2:#4E5E56; --ink-3:#7A8A82;
-  --rule:#D2DBD4; --rule-2:#AAB9AF; --accent:#2B4C9B; --accent-soft:#E2E8F6;
-  --in:#1C7A4E; --in-soft:#E0F1E7; --out:#B03838; --out-soft:#F7E3E1; --warn:#9A6210; --warn-soft:#FAEFD9;
-  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --outer:#DCE6F4; --frame:#1B1B1D; --canvas:#F4F4F2; --sheet:#FFFFFF; --ink:#131314; --ink-2:#67676B; --ink-3:#9A9A9E;
+  --rule:#ECECEA; --rule-2:#D9D9D6; --chip:#EFEFED;
+  --p-sky:#CFE0F7; --p-sky-ink:#2F5D9E; --p-lav:#E4DEF8; --p-lav-ink:#5B4BA8; --p-mint:#D6EFDD; --p-mint-ink:#2A7A4B;
+  --p-cream:#F7EDCB; --p-cream-ink:#8A6714; --p-peach:#F8DDD4; --p-peach-ink:#A5452C;
+  --accent:#8DB6F0; --accent-soft:#E6EFFC; --in:#22874F; --out:#C9402F; --warn:#9A6A10; --warn-soft:#F7EDCB; --in-soft:#D6EFDD; --out-soft:#F8DDD4;
+  --c-rev:#131314; --c-exp:#8DB6F0; --c-nw:#9B87E8;
+  --shadow:0 1px 2px rgba(20,20,20,.04),0 8px 24px rgba(20,20,20,.05);
+  --f-display:"Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --paper:#0E1411; --sheet:#151D19; --ink:#E4EBE6; --ink-2:#A0B0A7; --ink-3:#71827A;
-  --rule:#25322B; --rule-2:#3A4B42; --accent:#93ABF1; --accent-soft:#1D2640;
-  --in:#55C48D; --in-soft:#15291F; --out:#F07C7C; --out-soft:#331B1B; --warn:#E5AF55; --warn-soft:#2E2414; color-scheme:dark }}
+  --outer:#0C0D10; --frame:#000000; --canvas:#141518; --sheet:#1D1F23; --ink:#F1F1EF; --ink-2:#A8A8AD; --ink-3:#77777C;
+  --rule:#2A2C31; --rule-2:#3A3C42; --chip:#26282D;
+  --p-sky:#22324A; --p-sky-ink:#A9C8F3; --p-lav:#2D2846; --p-lav-ink:#C5B9F5; --p-mint:#1E3527; --p-mint-ink:#9BD9B0;
+  --p-cream:#3A3220; --p-cream-ink:#EBD28E; --p-peach:#3E2621; --p-peach-ink:#F2B4A2;
+  --accent:#8DB6F0; --accent-soft:#22324A; --in:#5FCB8C; --out:#F08A7A; --warn:#EBD28E; --warn-soft:#3A3220; --in-soft:#1E3527; --out-soft:#3E2621;
+  --c-rev:#F1F1EF; --c-exp:#6F9BDA; --c-nw:#B3A3F0; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark }}
 :root[data-theme="dark"]{
-  --paper:#0E1411; --sheet:#151D19; --ink:#E4EBE6; --ink-2:#A0B0A7; --ink-3:#71827A;
-  --rule:#25322B; --rule-2:#3A4B42; --accent:#93ABF1; --accent-soft:#1D2640;
-  --in:#55C48D; --in-soft:#15291F; --out:#F07C7C; --out-soft:#331B1B; --warn:#E5AF55; --warn-soft:#2E2414; color-scheme:dark }
+  --outer:#0C0D10; --frame:#000000; --canvas:#141518; --sheet:#1D1F23; --ink:#F1F1EF; --ink-2:#A8A8AD; --ink-3:#77777C;
+  --rule:#2A2C31; --rule-2:#3A3C42; --chip:#26282D;
+  --p-sky:#22324A; --p-sky-ink:#A9C8F3; --p-lav:#2D2846; --p-lav-ink:#C5B9F5; --p-mint:#1E3527; --p-mint-ink:#9BD9B0;
+  --p-cream:#3A3220; --p-cream-ink:#EBD28E; --p-peach:#3E2621; --p-peach-ink:#F2B4A2;
+  --accent:#8DB6F0; --accent-soft:#22324A; --in:#5FCB8C; --out:#F08A7A; --warn:#EBD28E; --warn-soft:#3A3220; --in-soft:#1E3527; --out-soft:#3E2621;
+  --c-rev:#F1F1EF; --c-exp:#6F9BDA; --c-nw:#B3A3F0; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark }
 *{box-sizing:border-box}
-body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;
-  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 32px}
+body{background:var(--outer);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 28px}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.app{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:0}
-.top{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:18px 14px;border-bottom:1px solid var(--rule-2);margin-bottom:20px}
-.brand{display:flex;flex-direction:column;gap:0;margin-right:auto;min-width:0;flex:1 1 200px}
-.brand h1{font-family:var(--f-display);font-weight:700;font-size:24px;letter-spacing:-.01em;margin:0;line-height:1.1}
-.brand span{font-size:12px;color:var(--ink-2)}
-.period{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.seg{display:inline-flex;border:1px solid var(--rule-2);border-radius:6px;overflow:hidden;background:var(--sheet)}
-.seg button{border:0;background:none;padding:6px 11px;cursor:pointer;font-size:13px;color:var(--ink-2)}
-.seg button+button{border-left:1px solid var(--rule)}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+.num,.mono{font-variant-numeric:tabular-nums}
+svg.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- frame ---------- */
+.frame{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:76px minmax(0,1fr);background:var(--frame);border-radius:30px;padding:12px 12px 12px 0;min-height:calc(100vh - 48px);box-shadow:0 30px 60px -30px rgba(20,30,50,.35)}
+.rail{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;position:sticky;top:12px;align-self:start;height:calc(100vh - 72px)}
+.rail .logo{width:44px;height:44px;border-radius:14px;background:var(--p-cream);color:#131314;display:grid;place-items:center;font-weight:800;font-size:20px;letter-spacing:-.04em;margin-bottom:14px;text-decoration:none}
+.rail-btn{position:relative;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:#8E8E93;border:0;background:none;cursor:pointer;text-decoration:none}
+.rail-btn:hover{color:#FFFFFF;background:rgba(255,255,255,.07)}
+.rail-btn[aria-current="page"]{color:#FFFFFF;background:rgba(255,255,255,.1)}
+.rail-btn[aria-current="page"]::before{content:"";position:absolute;left:-16px;top:50%;width:7px;height:16px;margin-top:-8px;border-radius:0 6px 6px 0;background:#FFFFFF}
+.rail-btn .rdot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--p-cream)}
+.rail .sp{flex:1}
+.content{background:var(--canvas);border-radius:22px;padding:22px 26px 30px;min-width:0}
+
+/* ---------- header ---------- */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;margin-bottom:16px}
+.menu-btn{position:relative;display:none;align-items:center;justify-content:center;width:42px;height:42px;border:0;border-radius:12px;background:var(--frame);color:#fff;cursor:pointer;flex:none}
+.menu-btn svg{width:20px;height:20px}
+.menu-btn .dot{position:absolute;top:-6px;right:-8px}
+.greet{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0;flex:1 1 220px}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--p-lav);color:var(--p-lav-ink);display:grid;place-items:center;font-weight:700;font-size:15px;flex:none}
+.greet h1{font-family:var(--f-display);font-size:19px;font-weight:700;margin:0;letter-spacing:-.01em;line-height:1.2}
+.greet p{margin:0;font-size:12.5px;color:var(--ink-2)}
+.search{display:flex;align-items:center;gap:8px;background:var(--chip);border-radius:999px;padding:0 14px;height:42px;flex:0 1 340px;min-width:180px;color:var(--ink-3)}
+.search input{border:0;background:none;outline:none;width:100%;color:var(--ink);font-size:13.5px}
+.search:focus-within{box-shadow:0 0 0 2px var(--accent)}
+.userbox{display:flex;align-items:center;gap:8px}
+.upill{display:inline-flex;align-items:center;gap:9px;height:42px;padding:0 6px 0 14px;border-radius:999px;background:var(--frame);color:#fff;font-weight:600;font-size:13px}
+.upill .ub{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;cursor:pointer}
+.upill .ub:hover{background:rgba(255,255,255,.22)}
+.upill .ub svg{width:16px;height:16px}
+.role{font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:999px;background:var(--p-cream);color:#6b5210}
+.period{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:20px}
+.seg{display:inline-flex;background:var(--chip);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:6px 13px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-2);border-radius:999px}
+.seg button[aria-pressed="true"]{background:var(--sheet);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .stepper{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
-select.inp,input.inp{border:1px solid var(--rule-2);background:var(--sheet);border-radius:6px;padding:6px 9px;min-width:0}
+select.inp,input.inp{border:1px solid var(--rule-2);background:var(--sheet);border-radius:10px;padding:7px 10px;min-width:0}
+.stepper .inp{border-radius:999px;border-color:transparent;background:var(--chip);font-weight:600}
+
+/* ---------- drawer ---------- */
 .side{position:fixed;top:0;left:0;bottom:0;z-index:30;width:min(300px,86vw);display:flex;flex-direction:column;gap:2px;overflow-y:auto;
-  background:var(--sheet);border-right:1px solid var(--rule-2);box-shadow:0 10px 40px rgba(0,0,0,.22);
-  padding:calc(14px + env(safe-area-inset-top, 0px)) 12px calc(20px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-left, 0px));
+  background:var(--frame);color:#E9E9EA;box-shadow:0 10px 40px rgba(0,0,0,.35);
+  padding:calc(16px + env(safe-area-inset-top, 0px)) 12px calc(20px + env(safe-area-inset-bottom, 0px)) calc(12px + env(safe-area-inset-left, 0px));
   transform:translateX(-106%);visibility:hidden;transition:transform .22s ease, visibility 0s linear .22s}
 .side.open{transform:none;visibility:visible;transition:transform .22s ease}
-.side .dhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px 10px 10px;margin-bottom:6px;border-bottom:1px solid var(--rule)}
-.side .dhead b{font-family:var(--f-display);font-size:17px}
-.scrim{position:fixed;inset:0;z-index:25;background:rgba(10,20,15,.38)}
-.menu-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--rule-2);border-radius:8px;background:var(--sheet);cursor:pointer;flex:none}
-.menu-btn:hover{border-color:var(--ink-2)}
-.menu-btn .dot{position:absolute;top:-6px;right:-8px}
-.closeb{border:0;background:none;cursor:pointer;font-size:20px;line-height:1;padding:6px 8px;border-radius:6px;color:var(--ink-2)}
-.closeb:hover{background:var(--paper);color:var(--ink)}
-.side .grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:14px 10px 4px}
-.side .dhead+.grp{margin-top:4px}
-.side a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;color:var(--ink-2);text-decoration:none;font-weight:500}
-.side a:hover{background:var(--paper);color:var(--ink)}
-.side a[aria-current="page"]{background:var(--accent-soft);color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
-.badge{font-family:var(--f-mono);font-size:11px;padding:1px 6px;border-radius:10px;background:var(--warn-soft);color:var(--warn)}
+.side .dhead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px 12px 8px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08)}
+.side .dhead b{font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px}
+.side .dhead .logo{width:32px;height:32px;border-radius:10px;background:var(--p-cream);color:#131314;display:grid;place-items:center;font-weight:800}
+.side .grp{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#7C7C82;margin:14px 10px 4px;font-weight:700}
+.side a{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;color:#B9B9BE;text-decoration:none;font-weight:500}
+.side a .lbl{flex:1}
+.side a:hover{background:rgba(255,255,255,.06);color:#fff}
+.side a[aria-current="page"]{background:#fff;color:#131314}
+.side .ufoot{margin-top:auto;padding:14px 8px 0;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:10px;font-size:12.5px;color:#9C9CA1}
+.side .ufoot b{color:#fff}
+.side .ufoot .btn{background:rgba(255,255,255,.08);color:#fff;border-color:transparent}
+.closeb{border:0;background:none;cursor:pointer;font-size:18px;line-height:1;padding:6px 8px;border-radius:8px;color:#9C9CA1}
+.closeb:hover{background:rgba(255,255,255,.08);color:#fff}
+.scrim{position:fixed;inset:0;z-index:25;background:rgba(10,12,16,.45)}
+
+/* ---------- generic ---------- */
 main{min-width:0}
-.banner{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:10px 14px;border:1px dashed var(--warn);background:var(--warn-soft);color:var(--ink);border-radius:8px;margin-bottom:18px;font-size:13px}
-.banner b{color:var(--warn)}
-.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:22px 24px;min-width:0}
+.badge{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--p-peach);color:var(--p-peach-ink)}
+.banner{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--p-cream);color:#3d2f08;border-radius:16px;margin-bottom:18px;font-size:13px}
+.banner b{font-weight:700}
+.banner .btn{background:#131314;color:#fff;border-color:#131314}
+.sheet{background:var(--sheet);border-radius:20px;padding:22px 24px;min-width:0;box-shadow:var(--shadow)}
 .sheet+.sheet{margin-top:18px}
-.h2{font-family:var(--f-display);font-weight:700;font-size:21px;margin:0;letter-spacing:-.01em;text-wrap:balance}
-.lede{color:var(--ink-2);margin:4px 0 0;max-width:68ch}
+.h2{font-family:var(--f-display);font-weight:700;font-size:20px;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.lede{color:var(--ink-2);margin:4px 0 0;max-width:72ch}
 .headrow{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
-.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule-2);background:var(--sheet);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 2px 12px}
+.sec-h h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
+.sec-h a,.sec-h span{font-size:12.5px;color:var(--ink-2);text-decoration:none}
+.sec-h a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule-2);background:var(--sheet);border-radius:999px;padding:7px 15px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;color:var(--ink);text-decoration:none}
 .btn:hover{border-color:var(--ink-2)}
-.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
-.btn.danger{color:var(--out);border-color:var(--out)}
-.btn.sm{padding:3px 8px;font-size:12px}
-.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
-.num,.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-/* KPI */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr));gap:0;border:1px solid var(--rule);border-radius:10px;background:var(--sheet);overflow:hidden}
-.kpi{padding:14px 16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);margin:0 -1px -1px 0;min-width:0}
-.kpi .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:clamp(16px,1.35vw + 6px,21px);font-weight:500;margin-top:4px;line-height:1.25;letter-spacing:-.02em;overflow-wrap:anywhere}
-.kpi .v small{font-size:.62em;font-weight:500;color:var(--ink-2);letter-spacing:0;margin-right:3px}
-.kpi .d{font-size:12px;color:var(--ink-2);margin-top:2px}
+.btn.pri{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.btn.pri:hover{opacity:.88}
+.btn.danger{color:var(--out);border-color:var(--out);background:transparent}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn[disabled]{opacity:.6;cursor:progress}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
 .up{color:var(--in)} .dn{color:var(--out)}
-.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;margin-top:18px}
-.grid2 .sheet+.sheet{margin-top:0}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--ink-2);margin:6px 0 4px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.muted{color:var(--ink-2)} .small{font-size:12px}
+.empty{padding:36px 10px;text-align:center;color:var(--ink-2)}
+.empty .btn{margin-top:12px}
+
+/* ---------- dashboard ---------- */
+.dash{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+.dash-main{display:flex;flex-direction:column;gap:22px;min-width:0}
+.dash-main>.sheet{margin-top:0}
+.cards{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);gap:16px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory}
+.bcard{position:relative;border-radius:22px;padding:20px 22px;min-height:170px;display:flex;flex-direction:column;gap:6px;overflow:hidden;scroll-snap-align:start;isolation:isolate}
+.bcard::after{content:"";position:absolute;inset:0 0 0 38%;z-index:-1;background-image:radial-gradient(circle,currentColor 1.1px,transparent 1.6px);background-size:9px 9px;opacity:.10;
+  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 70% 50%,#000 40%,transparent 75%);mask-image:radial-gradient(ellipse 70% 80% at 70% 50%,#000 40%,transparent 75%)}
+.bcard.dark{background:#1B1B1D;color:#fff}
+.bcard.light{background:var(--sheet);color:var(--ink);box-shadow:var(--shadow)}
+.bcard.pastel{background:var(--p-sky);color:#13233b}
+.bc-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;opacity:.8}
+.bc-bal{font-size:clamp(22px,2.2vw,28px);font-weight:700;letter-spacing:-.02em;margin-top:8px;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.bc-bal small{font-size:.55em;font-weight:600;opacity:.65;margin-right:4px}
+.bc-num{font-size:14px;font-weight:600;letter-spacing:.06em;opacity:.85}
+.bc-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;font-size:12px;opacity:.75}
+.bc-mark{font-weight:800;font-style:italic;font-size:17px;letter-spacing:-.02em;opacity:1}
+.qa{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.qa a{display:flex;align-items:center;gap:10px;padding:10px 14px 10px 10px;border-radius:18px;background:var(--sheet);color:var(--ink);text-decoration:none;font-weight:600;font-size:13.5px;box-shadow:var(--shadow)}
+.qa a .qi{width:36px;height:36px;border-radius:50%;background:var(--frame);color:#fff;display:grid;place-items:center;flex:none}
+.qa a .qi svg{width:17px;height:17px}
+.qa a.on{background:var(--accent);color:#0f2240}
+.qa a.on .qi{background:#fff;color:#131314}
+.qa a .badge{margin-left:auto}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:14px}
+.tile{border-radius:20px;padding:16px 18px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.tile .tl{font-size:12.5px;font-weight:600;opacity:.8}
+.tile .tv{font-size:clamp(17px,1.25vw + 6px,22px);font-weight:700;letter-spacing:-.02em;line-height:1.2;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.tile .tv small{font-size:.6em;font-weight:600;opacity:.7;margin-right:3px}
+.tile .td{font-size:11.5px;font-weight:600;margin-top:auto;padding-top:8px;opacity:.85}
+.p-mint{background:var(--p-mint);color:var(--p-mint-ink)} .p-peach{background:var(--p-peach);color:var(--p-peach-ink)}
+.p-lav{background:var(--p-lav);color:var(--p-lav-ink)} .p-cream{background:var(--p-cream);color:var(--p-cream-ink)} .p-sky{background:var(--p-sky);color:var(--p-sky-ink)}
+.tile .tv,.tile .tl{color:var(--ink)}
+.chartcard{background:var(--accent-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--ink-2);margin:6px 0 4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .chart svg{width:100%;height:auto;display:block}
-.bars{display:flex;flex-direction:column;gap:9px;margin-top:10px}
-.bar .lab{display:flex;justify-content:space-between;gap:10px;font-size:13px}
-.bar .lab span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar .track{height:7px;background:var(--rule);border-radius:4px;margin-top:4px;overflow:hidden}
-.bar .fill{height:100%;background:var(--out);border-radius:4px}
+.stat{position:sticky;top:12px;background:var(--sheet);border-radius:26px;padding:22px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px}
+.stat .sh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.stat .sh h3{margin:0;font-size:17px;font-weight:700}
+.stat .sh span{font-size:11.5px;color:var(--ink-2);border:1px solid var(--rule-2);border-radius:999px;padding:3px 10px}
+.donut{display:block;width:100%;max-width:240px;height:auto;margin:0 auto}
+.dleg{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:11.5px;color:var(--ink-2)}
+.dleg span{display:flex;gap:6px;align-items:center;min-width:0}
+.dleg span em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dleg i{width:10px;height:10px;border-radius:3px;flex:none}
+.txl{display:flex;flex-direction:column;gap:12px}
+.txi{display:flex;align-items:center;gap:12px;min-width:0}
+.tico{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;flex:none}
+.tico svg{width:20px;height:20px}
+.tico.dk{background:var(--frame);color:#fff}
+.txi .tt{flex:1;min-width:0}
+.txi .tt b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.txi .tt span{display:block;font-size:11.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.txi .ta{font-weight:700;font-size:13.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .alerts{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.alert{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:8px;font-size:13px;background:var(--paper)}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;font-size:12.5px;background:var(--canvas)}
 .alert .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
-/* tables */
+.alert a{color:inherit;font-weight:700}
+.bars{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+
+/* ---------- tables ---------- */
 .tw{overflow-x:auto;margin-inline:-4px;padding-inline:4px}
 table{border-collapse:collapse;width:100%}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule-2);white-space:nowrap}
-td{padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:11.5px;color:var(--ink-3);font-weight:600;text-align:left;padding:9px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
 td.num,th.num{text-align:right;white-space:nowrap}
-.data tbody tr:hover td{background:var(--paper)}
+.data tbody tr:hover td{background:var(--canvas)}
 .data td.desc{min-width:220px;max-width:420px}
-.tag{display:inline-block;font-size:10.5px;letter-spacing:.04em;padding:0 6px;border-radius:9px;margin-left:6px;vertical-align:1px;background:var(--paper);color:var(--ink-2);border:1px solid var(--rule)}
-.tag.rv{background:var(--warn-soft);color:var(--warn);border-color:transparent}
-.tag.pair{background:var(--accent-soft);color:var(--accent);border-color:transparent}
-tr.rv td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
-td.in{color:var(--in)} td.out{color:var(--out)}
-select.cat{border:1px solid var(--rule);background:var(--sheet);border-radius:5px;padding:3px 6px;max-width:240px;font-size:12.5px}
-.iconbtn{border:1px solid transparent;background:none;cursor:pointer;padding:2px 6px;border-radius:5px;color:var(--ink-3);font-size:13px}
+.tag{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:1px;background:var(--chip);color:var(--ink-2)}
+.tag.rv{background:var(--p-peach);color:var(--p-peach-ink)}
+.tag.pair{background:var(--p-sky);color:var(--p-sky-ink)}
+tr.rv td:first-child{box-shadow:inset 3px 0 0 var(--p-peach-ink)}
+td.in{color:var(--in);font-weight:600} td.out{color:var(--out);font-weight:600}
+select.cat{border:1px solid var(--rule-2);background:var(--sheet);border-radius:8px;padding:4px 7px;max-width:240px;font-size:12.5px}
+.iconbtn{border:1px solid transparent;background:none;cursor:pointer;padding:3px 7px;border-radius:8px;color:var(--ink-3);font-size:13px}
 .iconbtn:hover{border-color:var(--rule-2);color:var(--ink)}
 .iconbtn.armed{color:var(--out);border-color:var(--out)}
-/* statements */
-.stmt-head{border-bottom:1px solid var(--rule-2);padding-bottom:12px;margin-bottom:6px}
-.stmt-head .t{font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:.01em;text-transform:uppercase;margin:2px 0}
+.stmt-head .t{font-family:var(--f-display);font-weight:800;font-size:19px;letter-spacing:-.01em;margin:2px 0}
 .stmt-head .s{color:var(--ink-2);font-size:13px}
-.stmt td{border-bottom:0;padding:4px 10px}
+.stmt td{border-bottom:0;padding:5px 10px}
 .stmt td.num{min-width:130px}
-.stmt tr.sec td{padding-top:16px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:12px}
+.stmt tr.sec td{padding-top:18px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-size:11.5px}
 .stmt tr.sec2 td{padding-top:10px;font-weight:600;color:var(--ink-2);font-size:13px}
 .stmt tr.r td:first-child{padding-left:26px}
-.stmt tr.r td.code{color:var(--ink-3);font-family:var(--f-mono);font-size:12px;width:64px;padding-left:10px}
 .stmt tr.sub td{font-weight:600}
 .stmt tr.sub td.num{border-top:1px solid var(--ink-2)}
-.stmt tr.tot td{font-weight:700;padding-top:8px}
+.stmt tr.tot td{font-weight:800;padding-top:9px}
 .stmt tr.tot td.num{border-top:1px solid var(--ink);border-bottom:3px double var(--ink)}
+.stmt tr.tot td:first-child{background:var(--canvas);border-radius:10px 0 0 10px}
 .stmt tr.note td{color:var(--ink-2);font-size:12px;padding-top:12px}
-.stmt th{border-bottom:1px solid var(--rule-2)}
 .ok{color:var(--in)} .bad{color:var(--out)}
-/* journal */
-.jr td{border-bottom:0;padding:3px 10px}
-.jr tr.first td{border-top:1px solid var(--rule);padding-top:8px}
+.jr td{border-bottom:0;padding:4px 10px}
+.jr tr.first td{border-top:1px solid var(--rule);padding-top:10px}
 .jr td.acr{padding-left:34px}
-.jr tr.memo td{color:var(--ink-3);font-size:12px;padding-bottom:8px}
-.jr tfoot td{border-top:1px solid var(--ink);border-bottom:3px double var(--ink);font-weight:600}
-/* upload */
-.drop{border:2px dashed var(--rule-2);border-radius:12px;padding:30px 20px;text-align:center;background:var(--paper);cursor:pointer;transition:border-color .15s, background .15s}
+.jr tr.memo td{color:var(--ink-3);font-size:12px;padding-bottom:10px}
+.jr tfoot td{border-top:1px solid var(--ink);border-bottom:3px double var(--ink);font-weight:700}
+
+/* ---------- forms & upload ---------- */
+.drop{border:2px dashed var(--rule-2);border-radius:20px;padding:32px 20px;text-align:center;background:var(--canvas);cursor:pointer;transition:border-color .15s, background .15s}
 .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
-.drop .big{font-family:var(--f-display);font-weight:700;font-size:19px}
+.drop .big{font-family:var(--f-display);font-weight:700;font-size:18px}
 .drop p{margin:6px auto 0;color:var(--ink-2);max-width:56ch}
 .banks{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px}
-.banks span{font-size:12px;padding:2px 10px;border:1px solid var(--rule-2);border-radius:12px;background:var(--sheet)}
+.banks span{font-size:12px;font-weight:600;padding:3px 12px;border-radius:999px}
+.banks span:nth-child(1){background:var(--p-sky);color:var(--p-sky-ink)} .banks span:nth-child(2){background:var(--p-lav);color:var(--p-lav-ink)}
+.banks span:nth-child(3){background:var(--p-cream);color:var(--p-cream-ink)} .banks span:nth-child(4){background:var(--p-mint);color:var(--p-mint-ink)}
 .form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
-.field label{font-size:12px;color:var(--ink-2);font-weight:500}
-textarea.inp{border:1px solid var(--rule-2);background:var(--sheet);border-radius:6px;padding:8px;width:100%;min-height:140px;font-family:var(--f-mono);font-size:12px}
-.pw{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;background:var(--warn-soft);border-radius:8px;margin-top:10px}
-.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.field label{font-size:12px;color:var(--ink-2);font-weight:600}
+textarea.inp{border:1px solid var(--rule-2);background:var(--sheet);border-radius:12px;padding:10px;width:100%;min-height:140px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.pw{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 14px;background:var(--p-cream);color:#3d2f08;border-radius:14px;margin-top:10px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
 .chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;cursor:pointer}
 details.more{margin-top:16px;border-top:1px solid var(--rule);padding-top:12px}
 details.more summary{cursor:pointer;font-weight:600}
-.muted{color:var(--ink-2)}
-.small{font-size:12px}
-.empty{padding:36px 10px;text-align:center;color:var(--ink-2)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom, 0px));background:var(--ink);color:var(--sheet);padding:9px 16px;border-radius:8px;font-size:13px;z-index:20;max-width:calc(100% - 32px);box-shadow:0 6px 24px rgba(0,0,0,.18)}
-.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--rule-2);border-top-color:var(--accent);border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-1px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom, 0px));background:#131314;color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;z-index:40;max-width:calc(100% - 32px);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--rule-2);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-1px}
 @keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---------- auth ---------- */
+.auth{min-height:calc(100vh - 48px);display:flex;align-items:center;justify-content:center;padding-block:20px}
+.auth-card{width:100%;max-width:420px;background:var(--sheet);border-radius:28px;padding:30px 28px;box-shadow:0 30px 60px -30px rgba(20,30,50,.35)}
+.auth-card .alogo{width:48px;height:48px;border-radius:16px;background:#1B1B1D;color:var(--p-cream);display:grid;place-items:center;font-weight:800;font-size:22px;margin-bottom:16px}
+.auth-card h1{font-family:var(--f-display);font-weight:800;font-size:25px;margin:0;letter-spacing:-.02em}
+.auth-card .sub{color:var(--ink-2);margin:4px 0 18px;font-size:13px}
+.auth-tabs{display:flex;background:var(--chip);border-radius:999px;padding:4px;margin-bottom:18px}
+.auth-tabs button{flex:1;border:0;background:none;padding:8px 6px;cursor:pointer;font-weight:600;color:var(--ink-2);border-radius:999px}
+.auth-tabs button[aria-selected="true"]{background:var(--sheet);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.auth-card form{display:flex;flex-direction:column;gap:12px}
+.auth-card .field input{width:100%;padding:11px 13px;font-size:15px;border-radius:12px;background:var(--canvas);border-color:transparent}
+.auth-card .btn.pri{justify-content:center;padding:12px 14px;font-size:14px}
+.auth-msg{font-size:13px;padding:9px 12px;border-radius:12px}
+.auth-msg.err{background:var(--p-peach);color:var(--p-peach-ink)}
+.auth-msg.info{background:var(--p-sky);color:var(--p-sky-ink)}
+.auth-note{font-size:12px;color:var(--ink-2);margin-top:16px;line-height:1.55}
+
 @media (prefers-reduced-motion: reduce){.spin{animation:none}.drop{transition:none}.side,.side.open{transition:none}}
+@media (max-width: 1180px){ .dash{grid-template-columns:minmax(0,1fr)} .stat{position:static} }
 @media (max-width: 860px){
-  .grid2{grid-template-columns:minmax(0,1fr)}
-  .sheet{padding:16px}
+  body{padding-block:0 20px;background:var(--canvas)}
+  .greet p{display:none}
+  .greet h1{font-size:17px}
+  .avatar{width:38px;height:38px;font-size:13px}
+  .frame{display:block;background:none;padding:0;border-radius:0;box-shadow:none;min-height:0}
+  .rail{display:none}
+  .content{background:none;border-radius:0;padding:14px 0 24px}
+  .menu-btn{display:inline-flex}
+  .search{order:5;flex:1 1 100%}
+  .greet{flex:1 1 0}
+  .upill .uname{display:none}
+  .sheet{padding:16px;border-radius:18px}
+  .cards{grid-auto-columns:minmax(240px,85%)}
 }
 </style>
 
-<div class="app">
-  <header class="top">
-    <button class="menu-btn" id="menuBtn" data-act="nav" aria-label="Buka menu" aria-expanded="false" aria-controls="side"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg><span id="menuDot"></span></button>
-    <div class="brand"><h1>Dana e-Statement</h1><span>Pembukuan pribadi dari rekening koran — diproses di browser Anda</span></div>
+<div class="auth" id="auth"></div>
+<div class="frame" id="app" hidden>
+  <aside class="rail" id="rail" aria-label="Navigasi cepat"></aside>
+  <div class="content">
+    <header class="top">
+      <button class="menu-btn" id="menuBtn" data-act="nav" aria-label="Buka menu" aria-expanded="false" aria-controls="side"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span id="menuDot"></span></button>
+      <div class="greet" id="greet"></div>
+      <label class="search" for="gsearch"><svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M11 18a7 7 0 100-14 7 7 0 000 14zM20 20l-4-4"/></svg><input id="gsearch" type="search" placeholder="Cari transaksi, mis. SPAN atau QRIS" autocomplete="off" aria-label="Cari transaksi"></label>
+      <div class="userbox" id="userbox"></div>
+    </header>
     <div class="period" id="period"></div>
-  </header>
-  <div class="scrim" id="scrim" data-act="navclose" hidden></div>
-  <nav class="side" id="side" aria-label="Navigasi"></nav>
-  <main id="main"></main>
+    <main id="main"></main>
+  </div>
 </div>
+<div class="scrim" id="scrim" data-act="navclose" hidden></div>
+<nav class="side" id="side" aria-label="Navigasi"></nav>
 <div class="toast" id="toast" hidden></div>
 <input type="file" id="fileIn" accept="application/pdf,.pdf" multiple hidden>
 <input type="file" id="restoreIn" accept="application/json,.json" hidden>
@@ -448,7 +575,37 @@ const LS='bukukas.ardana.v1';
 const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
 function blank(){ return {v:1,sample:false,owner:'ARDANA',banks:[],statements:[],txns:[],manual:[],openings:{},openDate:'',rules:[]}; }
 function load(){ try{ const s=localStorage.getItem(LS); if(s){ const o=JSON.parse(s); if(o&&o.v===1) return o; } }catch(e){} return null; }
-function save(){ try{ localStorage.setItem(LS,JSON.stringify(S)); }catch(e){} }
+/* ---------- Akun & enkripsi ---------- */
+const ACC_KEY='danaes.accounts.v1', DATA_KEY='danaes.data.v1.', ITER=310000, IDLE_MIN=15;
+let SESSION=null, saveT=null, lastAct=Date.now(), fails=0, lockUntil=0;
+function b64(buf){ const u=new Uint8Array(buf); let s=''; for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); }
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function deriveKey(pw,salt,iter){ const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']); return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']); }
+async function encObj(key,obj){ const iv=crypto.getRandomValues(new Uint8Array(12)); const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(obj))); return {iv:b64(iv),ct:b64(ct)}; }
+async function decObj(key,blob){ const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(blob.iv)},key,unb64(blob.ct)); return JSON.parse(new TextDecoder().decode(pt)); }
+function accounts(){ let a=[]; try{ a=JSON.parse(localStorage.getItem(ACC_KEY)||'[]')||[]; }catch(e){ return []; }
+  if(a.length&&!a.some(x=>x.role==='admin')){ a.sort((x,y)=>(x.created||'')<(y.created||'')?-1:1); a.forEach((x,i)=>x.role=i===0?'admin':(x.role||'user')); setAccounts(a); }
+  return a; }
+const SEED={"acct":{"id":"seed-danarikza","name":"Ardana Rikza Muhtadin","user":"danarikza","salt":"jgCEQSGhf/zSDctq1RPBqQ==","iter":310000,"created":"2026-11-01T07:31:00.000Z","role":"admin","super":true,"seed":true},"blob":{"iv":"22PrNUENqMzB7Kwi","ct":"7DeguOrIngPrnM5KS1kK8Qclf6waWZfOVKTIw7JQClXB+Cw0ZaFQrkdQ2begXEB6HqVRj7DYiN1AJnEvOtwaUonVO/9jzCRnozIqpuNIbyklmZSo9At/k7TVRU1aVSVkVwUSnudXvlpZYnvt4cseleWPvQU36qXsyYZBSEl1I3U3Qzfe2sbTNKoWPGHpYsXAhtnZ9huIThtWrJBoFwA="}};
+function seedAccount(){ let a=[]; try{ a=JSON.parse(localStorage.getItem(ACC_KEY)||'[]')||[]; }catch(e){}
+  const ex=a.find(x=>x.user===SEED.acct.user);
+  if(ex){ if(ex.role!=='admin'||!ex.super){ ex.role='admin'; ex.super=true; setAccounts(a); } return; }
+  try{ localStorage.setItem(DATA_KEY+SEED.acct.id,JSON.stringify(SEED.blob)); }catch(e){ return; }
+  setAccounts([Object.assign({},SEED.acct)].concat(a)); }
+const SET_KEY='danaes.settings.v1';
+function settings(){ try{ return Object.assign({openSignup:true},JSON.parse(localStorage.getItem(SET_KEY)||'{}')); }catch(e){ return {openSignup:true}; } }
+function setSettings(o){ try{ localStorage.setItem(SET_KEY,JSON.stringify(Object.assign(settings(),o))); }catch(e){} }
+const me=()=>SESSION&&accounts().find(a=>a.id===SESSION.acct.id);
+const isAdmin=()=>{ const m=me(); return !!(m&&m.role==='admin'); };
+const blobSize=id=>{ try{ return (localStorage.getItem(DATA_KEY+id)||'').length; }catch(e){ return 0; } };
+const fdt=s=>{ if(!s) return '–'; const d=new Date(s); return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); };
+async function createAccount(name,u,pw,role){ const salt=crypto.getRandomValues(new Uint8Array(16)); const key=await deriveKey(pw,salt,ITER);
+  const acct={id:uid(),name,user:u,salt:b64(salt),iter:ITER,created:new Date().toISOString(),role}; return {acct,key}; }
+function validateNew(name,u,p1,p2){ if(!name) return 'Isi nama lengkap.'; if(!/^[a-z0-9._-]{3,32}$/.test(u)) return 'Nama pengguna 3–32 karakter: huruf kecil, angka, titik, garis bawah, atau tanda hubung.';
+  if(accounts().some(a=>a.user===u)) return 'Nama pengguna sudah dipakai di perangkat ini.'; if(p1.length<8) return 'Kata sandi minimal 8 karakter.'; if(p1!==p2) return 'Ulangan kata sandi tidak sama.'; return null; }
+function setAccounts(a){ try{ localStorage.setItem(ACC_KEY,JSON.stringify(a)); return true; }catch(e){ return false; } }
+async function persistNow(){ if(!SESSION) return; const blob=await encObj(SESSION.key,S); try{ localStorage.setItem(DATA_KEY+SESSION.acct.id,JSON.stringify(blob)); }catch(e){ toast('Penyimpanan browser penuh. Unduh cadangan JSON sekarang.'); } }
+function save(){ if(!SESSION) return; clearTimeout(saveT); const sess=SESSION; saveT=setTimeout(()=>{ if(SESSION===sess) persistNow(); },250); }
 function makeSample(){
   const st=blank(); st.sample=true;
   st.banks=[{id:'BCA-4821',bank:'BCA',last4:'4821'},{id:'Jago-0197',bank:'Jago',last4:'0197'}];
@@ -494,10 +651,9 @@ function makeSample(){
   st.txns=T;
   return st;
 }
-let S=load()||makeSample();
+let S=blank();
 function categorizeAll(only){ for(const t of S.txns){ if(t.src==='user'||t.src==='pair') continue; if(only&&!only.has(t.id)) continue; const [c,src,rv]=autoCat(t); t.cat=c; t.src=src; t.review=rv||t.parseReview||false; } }
-if(S.sample&&!S.txns[0].cat){ categorizeAll(); pairTransfers(); }
-else if(!S.sample&&S.txns.length){ categorizeAll(); pairTransfers(); save(); }
+function afterLoad(){ if(S.sample&&S.txns.length&&!S.txns[0].cat){ categorizeAll(); pairTransfers(); } else if(!S.sample&&S.txns.length){ categorizeAll(); pairTransfers(); } }
 
 /* ---------- Ledger engine ---------- */
 let _ent=null;
@@ -573,7 +729,7 @@ const short=v=>{ const a=Math.abs(v); const s=a>=1e9?(a/1e9).toLocaleString('id-
 const titleCase=s=>String(s||'').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
 
 /* ---------- UI state ---------- */
-const VIEWS=[['Ikhtisar',[['ringkasan','Ringkasan'],['unggah','Unggah Rekening Koran'],['transaksi','Transaksi']]],['Pembukuan',[['jurnal','Jurnal Umum'],['buku-besar','Buku Besar'],['neraca-saldo','Neraca Saldo']]],['Laporan Keuangan',[['posisi','Posisi Keuangan'],['surplus','Surplus / Defisit'],['arus-kas','Arus Kas'],['matriks','Laporan Periodik']]],['Pengaturan',[['akun','Bagan Akun & Saldo Awal']]]];
+const VIEWS=[['Ikhtisar',[['ringkasan','Ringkasan'],['unggah','Unggah Rekening Koran'],['transaksi','Transaksi']]],['Pembukuan',[['jurnal','Jurnal Umum'],['buku-besar','Buku Besar'],['neraca-saldo','Neraca Saldo']]],['Laporan Keuangan',[['posisi','Posisi Keuangan'],['surplus','Surplus / Defisit'],['arus-kas','Arus Kas'],['matriks','Laporan Periodik']]],['Pengaturan',[['akun','Bagan Akun & Saldo Awal'],['daftar-akun','Daftar Akun']]]];
 const VIEW_IDS=VIEWS.flatMap(g=>g[1].map(v=>v[0]));
 let U={g:'M',key:null,view:'ringkasan',f:{acct:'',rv:false,q:'',all:false},ledger:null,jlim:300,tlim:400,pending:[],busy:false};
 try{ const u=JSON.parse(localStorage.getItem(LS+'.ui')||'{}'); if(u.g) U.g=u.g; }catch(e){}
@@ -596,16 +752,47 @@ function renderPeriod(){
   document.getElementById('period').innerHTML=`<div class="seg" role="group" aria-label="Jenis periode">${G.map(([g,l])=>`<button data-act="g" data-g="${g}" aria-pressed="${U.g===g}">${l}</button>`).join('')}</div>
   <div class="stepper"><button class="btn sm" data-act="step" data-d="-1" aria-label="Periode sebelumnya">‹</button>${sub}<input class="inp mono" type="number" id="yearIn" data-chg="year" min="1000" max="9999" step="1" value="${y}" style="width:96px" aria-label="Tahun"><button class="btn sm" data-act="step" data-d="1" aria-label="Periode berikutnya">›</button></div>${STANDALONE?'<button class="btn pri" data-act="xlsx">Unduh Excel</button>':''}`;
 }
+const ICP={grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',upload:'M12 15V4m0 0L8 8m4-4l4 4M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3',list:'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',
+ book:'M5 4.5A1.5 1.5 0 016.5 3H19v15H6.5A1.5 1.5 0 005 19.5zM5 19.5A1.5 1.5 0 006.5 21H19',layers:'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5',scale:'M12 4v16M6 20h12M5 8h14M5 8l-2.5 6a3 3 0 005 0zM19 8l-2.5 6a3 3 0 005 0z',
+ pie:'M12 3v9h9a9 9 0 11-9-9zM15 3.5A9 9 0 0120.5 9H15z',bars:'M5 20V11M12 20V4M19 20v-6',flow:'M4 8h13l-3-3M20 16H7l3 3',table:'M3 5h18v14H3zM3 10h18M9 5v14',
+ sliders:'M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1M15 5v4M9 10v4M17 15v4',users:'M9 11a4 4 0 100-8 4 4 0 000 8zM2 21a7 7 0 0114 0M16 3.5a4 4 0 010 7.5M22 21a6 6 0 00-4-5.6',
+ logout:'M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 17l-5-5 5-5M5 12h11',menu:'M4 7h16M4 12h16M4 17h16',
+ cup:'M5 8h11v5a5 5 0 01-5 5h-1a5 5 0 01-5-5zM16 9h1.5a2.5 2.5 0 010 5H16M8 3v2M12 3v2',basket:'M3 9h18l-2 11H5zM8 9l3-6M16 9l-3-6',car:'M4 16v-4l2-5h12l2 5v4zM4 12h16M7 16v2M17 16v2',plane:'M3 13l18-8-8 18-2-8z',
+ bolt:'M13 3L5 14h6l-1 7 8-11h-6z',phone:'M8 3h8v18H8zM11 18h2',home:'M4 11l8-7 8 7v9H4zM10 20v-5h4v5',heart:'M12 20s-7-4.5-7-10a4 4 0 017-2.5A4 4 0 0119 10c0 5.5-7 10-7 10z',shield:'M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z',
+ cap:'M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5',play:'M4 5h16v14H4zM10 9v6l5-3z',bag:'M5 8h14l-1 12H6zM9 8V6a3 3 0 016 0v2',qr:'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM18 14h2M14 18h2',
+ gift:'M4 10h16v10H4zM3 7h18v3H3zM12 7v13M12 7c-1.5-3-5-3.5-5-1.5S10.5 7 12 7zm0 0c1.5-3 5-3.5 5-1.5S13.5 7 12 7z',bank:'M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18',receipt:'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6',
+ percent:'M19 5L5 19M7 9a2 2 0 100-4 2 2 0 000 4zM17 19a2 2 0 100-4 2 2 0 000 4z',dots:'M6 12h.01M12 12h.01M18 12h.01',cash:'M3 7h18v10H3zM12 15a3 3 0 100-6 3 3 0 000 6z',wallet:'M4 7h15a1 1 0 011 1v10a1 1 0 01-1 1H4zM4 7V6a2 2 0 012-2h10M16 13h2',
+ swap:'M7 4L3 8l4 4M3 8h14M17 12l4 4-4 4M21 16H7',trend:'M3 17l6-6 4 4 8-8M15 7h6v6',card:'M3 6h18v12H3zM3 10h18M7 15h3',brief:'M4 8h16v11H4zM9 8V5h6v3M4 13h16',arrowin:'M12 4v13m0 0l-5-5m5 5l5-5M5 20h14'};
+const icon=(n,c)=>`<svg viewBox="0 0 24 24" class="ic${c?' '+c:''}" aria-hidden="true"><path d="${ICP[n]||ICP.dots}"/></svg>`;
+const VIEW_IC={ringkasan:'grid',unggah:'upload',transaksi:'list',jurnal:'book','buku-besar':'layers','neraca-saldo':'scale',posisi:'pie',surplus:'bars','arus-kas':'flow',matriks:'table',akun:'sliders','daftar-akun':'users'};
+const CAT_IC={'4':'brief','4-201':'percent','4-202':'trend','4-301':'gift','5-101':'cup','5-102':'basket','5-201':'car','5-202':'plane','5-301':'bolt','5-302':'phone','5-303':'home','5-401':'heart','5-402':'shield','5-403':'cap','5-501':'play','5-502':'bag','5-503':'qr','5-601':'gift','5-602':'users','5-701':'bank','5-702':'receipt','5-703':'percent','5-999':'dots','1-101':'cash','1-120':'wallet','1-190':'swap','1-199':'swap','1-201':'users','1-301':'trend','1-401':'home','2':'card'};
+const catIcon=c=>CAT_IC[c]||CAT_IC[c[0]]||'dots';
+const catTone=c=>c[0]==='4'?'p-mint':c[0]==='2'?'p-cream':c[0]==='1'?'p-sky':(['5-101','5-102','5-502','5-503','5-501'].includes(c)?'p-lav':'p-peach');
+function renderRail(){
+  const rv=S.txns.filter(t=>t.review).length;
+  const ids=['ringkasan','unggah','transaksi','jurnal','buku-besar','neraca-saldo','posisi','surplus','arus-kas','matriks','akun'].concat(isAdmin()?['daftar-akun']:[]);
+  const lab={}; VIEWS.forEach(g=>g[1].forEach(([id,l])=>lab[id]=l));
+  document.getElementById('rail').innerHTML=`<a class="logo" href="#ringkasan" title="Dana e-Statement" aria-label="Dana e-Statement">D</a>`+
+   `<button class="rail-btn" data-act="nav" title="Menu lengkap" aria-label="Buka menu lengkap">${icon('menu')}</button>`+
+   ids.map(id=>`<a class="rail-btn" href="#${id}" title="${lab[id]}" aria-label="${lab[id]}"${U.view===id?' aria-current="page"':''}>${icon(VIEW_IC[id])}${id==='transaksi'&&rv?'<span class="rdot"></span>':''}</a>`).join('')+
+   `<span class="sp"></span><button class="rail-btn" data-act="logout" title="Keluar" aria-label="Keluar">${icon('logout')}</button>`;
+}
+function renderGreet(){
+  const h=new Date().getHours(), sal=h<11?'Selamat pagi':h<15?'Selamat siang':h<18?'Selamat sore':'Selamat malam';
+  const nm=SESSION.acct.name.trim(), first=nm.split(/\s+/)[0], ini=nm.split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  document.getElementById('greet').innerHTML=`<span class="avatar" aria-hidden="true">${esc(ini)}</span><div style="min-width:0"><h1>${sal}, ${esc(first)}</h1><p>Pantau arus kas Anda bersama Dana e-Statement</p></div>`;
+}
 function renderSide(){
   const rv=S.txns.filter(t=>t.review).length;
   const md=document.getElementById('menuDot'); if(md) md.innerHTML=rv?`<span class="badge dot">${rv}</span>`:'';
-  document.getElementById('side').innerHTML=`<div class="dhead"><b>Dana e-Statement</b><button class="closeb" data-act="navclose" aria-label="Tutup menu">✕</button></div>`+VIEWS.map(([g,vs])=>`<div class="grp">${g}</div>`+vs.map(([id,l])=>`<a href="#${id}"${U.view===id?' aria-current="page"':''}>${l}${id==='transaksi'&&rv?`<span class="badge">${rv}</span>`:''}</a>`).join('')).join('');
+  document.getElementById('side').innerHTML=`<div class="dhead"><b><span class="logo">D</span>Dana e-Statement</b><button class="closeb" data-act="navclose" aria-label="Tutup menu">✕</button></div>`+VIEWS.map(([g,vs])=>`<div class="grp">${g}</div>`+vs.filter(([id])=>id!=='daftar-akun'||isAdmin()).map(([id,l])=>`<a href="#${id}"${U.view===id?' aria-current="page"':''}>${icon(VIEW_IC[id])}<span class="lbl">${l}</span>${id==='transaksi'&&rv?`<span class="badge">${rv}</span>`:''}</a>`).join('')).join('')+`<div class="ufoot"><span>Masuk sebagai <b>${esc(SESSION?SESSION.acct.name:'')}</b> (${esc(SESSION?SESSION.acct.user:'')})${isAdmin()?' · admin':''}</span><button class="btn" data-act="logout">Keluar</button></div>`;
 }
 function render(){
-  renderPeriod(); renderSide();
+  if(!SESSION) return;
+  renderPeriod(); renderSide(); renderRail(); renderGreet(); renderUser();
   const main=document.getElementById('main');
   const banner=S.sample?`<div class="banner"><span><b>Data contoh.</b> Angka di bawah fiktif, untuk memperlihatkan cara kerja sistem. Data contoh terhapus otomatis saat Anda mengunggah rekening koran pertama.</span><a class="btn sm" href="#unggah">Unggah rekening koran</a></div>`:'';
-  const fn={ringkasan:vRingkasan,unggah:vUnggah,transaksi:vTransaksi,jurnal:vJurnal,'buku-besar':vBukuBesar,'neraca-saldo':vNeracaSaldo,posisi:vPosisi,surplus:vSurplus,'arus-kas':vArus,matriks:vMatriks,akun:vAkun}[U.view]||vRingkasan;
+  const fn={ringkasan:vRingkasan,unggah:vUnggah,transaksi:vTransaksi,jurnal:vJurnal,'buku-besar':vBukuBesar,'neraca-saldo':vNeracaSaldo,posisi:vPosisi,surplus:vSurplus,'arus-kas':vArus,matriks:vMatriks,akun:vAkun,'daftar-akun':vDaftar}[U.view]||vRingkasan;
   main.innerHTML=banner+fn();
   if(U.view==='transaksi') renderTxRows();
 }
@@ -630,37 +817,58 @@ function stmtHead(title,sub,id){
 function vRingkasan(){
   const [s,e]=range(U.key), pk=prevKey(U.key), [ps,pe]=range(pk);
   if(!S.txns.length&&!S.manual.length) return `<div class="sheet empty"><div class="h2">Belum ada transaksi</div><p>Unggah PDF rekening koran untuk mulai menyusun jurnal dan laporan.</p><a class="btn pri" href="#unggah">Unggah rekening koran</a></div>`;
-  const t1=totals(flowIn(s,e)), t0=totals(flowIn(ps,pe)), n1=netWorth(balAt(e)), n0=netWorth(balAt(pe));
-  const dl=(a,b,inv)=>{ if(!b) return '<span class="muted">tidak ada pembanding</span>'; const d=(a-b)/Math.abs(b)*100; const good=inv?d<=0:d>=0; return `<span class="${good?'up':'dn'}">${d>=0?'▲':'▼'} ${Math.abs(d).toLocaleString('id-ID',{maximumFractionDigits:1})}%</span> <span class="muted">vs ${esc(label(pk))}</span>`; };
+  const t1=totals(flowIn(s,e)), t0=totals(flowIn(ps,pe)), be=balAt(e), n1=netWorth(be), n0=netWorth(balAt(pe));
+  const dl=(a,b,inv)=>{ if(!b) return 'belum ada pembanding'; const d=(a-b)/Math.abs(b)*100; const good=inv?d<=0:d>=0; return `<span class="${good?'up':'dn'}">${d>=0?'▲':'▼'} ${Math.abs(d).toLocaleString('id-ID',{maximumFractionDigits:1})}%</span> vs ${esc(label(pk))}`; };
   const sr=t1.rev?t1.sur/t1.rev:0, sr0=t0.rev?t0.sur/t0.rev:0;
   const f=flowIn(s,e); const ex=Object.keys(f).filter(c=>c[0]==='5'&&f[c]>0).map(c=>[c,f[c]]).sort((a,b)=>b[1]-a[1]);
-  const top=ex.slice(0,8), mx=top.length?top[0][1]:1;
   const rv=S.txns.filter(t=>t.review).length;
-  const recon=S.statements.filter(x=>x.recon==='selisih');
-  const kl=nv(balAt(e),'1-190');
-  const neg=ACCTS().list.filter(a=>(a.type==='A'||a.type==='L')&&a.code!=='1-190'&&a.code!=='1-199'&&nv(balAt(e),a.code)<-1);
+  // alerts
+  const recon=S.statements.filter(x=>x.recon==='selisih'), kl=nv(be,'1-190');
+  const neg=ACCTS().list.filter(a=>(a.type==='A'||a.type==='L')&&a.code!=='1-190'&&a.code!=='1-199'&&nv(be,a.code)<-1);
   const al=[];
-  if(rv) al.push(['var(--warn)',`${rv} transaksi masuk kategori bawaan dan perlu dicek. <a href="#transaksi" data-act="rvfilter">Tinjau</a>`]);
+  if(rv) al.push(['var(--p-peach-ink)',`${rv} transaksi masih berkategori bawaan dan perlu dicek. <a href="#transaksi" data-act="rvfilter">Tinjau</a>`]);
   recon.forEach(x=>al.push(['var(--out)',`Rekening koran “${esc(x.name)}” tidak rekonsiliasi: selisih Rp ${rp(x.diff)}.`]));
-  gaps().forEach(g=>al.push(['var(--out)',`${esc(g.label)}: saldo awal rekening koran ${fdate(g.date)} tidak menyambung dengan rekening koran sebelumnya (selisih Rp ${rp(g.diff)}). Kemungkinan transaksi ${esc(g.window)} belum terunggah. Selisih sementara dicatat di akun Suspen; unggah rekening koran periode itu untuk menghapusnya.`]));
-  if(Math.abs(kl)>1) al.push(['var(--accent)',`Akun kliring transfer bersaldo Rp ${rp(kl)}. Ada transfer antar rekening yang pasangannya belum diunggah.`]);
-  neg.forEach(a=>al.push(['var(--out)',`${esc(a.name)} bersaldo negatif per ${fdate(e)}. Periksa saldo awal atau kategori transaksinya.`]));
-  if(!al.length) al.push(['var(--in)','Semua transaksi sudah berkategori dan rekening koran rekonsiliasi.']);
-  const sumHtml=rekapTable();
-  return `<div class="headrow"><div><div class="eyebrow">${esc(label(U.key))}</div><h2 class="h2">Ringkasan keuangan</h2><p class="lede">${fdate(s)} s.d. ${fdate(e)}. Pemasukan dan pengeluaran di sini tidak memasukkan pindah dana antar rekening, tarik tunai, dan pembelian investasi.</p></div></div>
-  <div class="kpis">
-    <div class="kpi"><div class="eyebrow">Pendapatan</div><div class="v"><small>Rp</small>${rp(t1.rev)}</div><div class="d">${dl(t1.rev,t0.rev)}</div></div>
-    <div class="kpi"><div class="eyebrow">Beban</div><div class="v"><small>Rp</small>${rp(t1.exp)}</div><div class="d">${dl(t1.exp,t0.exp,true)}</div></div>
-    <div class="kpi"><div class="eyebrow">Surplus (defisit)</div><div class="v ${t1.sur<0?'dn':''}"><small>Rp</small>${acc(t1.sur)}</div><div class="d">${dl(t1.sur,t0.sur)}</div></div>
-    <div class="kpi"><div class="eyebrow">Rasio tabungan</div><div class="v">${t1.rev?(sr*100).toLocaleString('id-ID',{maximumFractionDigits:1})+'%':'–'}</div><div class="d muted">${t0.rev?'periode lalu '+(sr0*100).toLocaleString('id-ID',{maximumFractionDigits:1})+'%':'surplus ÷ pendapatan'}</div></div>
-    <div class="kpi"><div class="eyebrow">Kekayaan bersih</div><div class="v ${n1.nw<0?'dn':''}"><small>Rp</small>${acc(n1.nw)}</div><div class="d">${dl(n1.nw,n0.nw)}</div></div>
+  gaps().forEach(g=>al.push(['var(--out)',`${esc(g.label)}: saldo awal ${fdate(g.date)} tidak menyambung (selisih Rp ${rp(g.diff)}). Kemungkinan transaksi ${esc(g.window)} belum terunggah; selisih sementara dicatat di akun Suspen.`]));
+  if(Math.abs(kl)>1) al.push(['var(--p-sky-ink)',`Akun kliring transfer bersaldo Rp ${rp(kl)}: ada transfer antar rekening sendiri yang pasangannya belum diunggah.`]);
+  neg.forEach(a=>al.push(['var(--out)',`${esc(a.name)} bersaldo negatif per ${fdate(e)}.`]));
+  if(!al.length) al.push(['var(--in)','Semua transaksi berkategori dan rekening koran rekonsiliasi.']);
+  // account cards
+  const cards=S.banks.map((b,i)=>({b,code:bankCodeOf(i),bal:nv(be,bankCodeOf(i))}));
+  const cardHtml=cards.map((c,i)=>`<div class="bcard ${i===0?'dark':i%2?'light':'pastel'}"><div class="bc-top"><span>Saldo ${esc(c.b.bank)}</span><span>per ${fshort(e)}</span></div>
+    <div class="bc-bal"><small>Rp</small>${acc(c.bal)}</div><div class="bc-num">•••• ${esc(c.b.last4||'????')}</div>
+    <div class="bc-foot"><span>${esc(AC(c.code).name.replace(/ ••.*/,''))}</span><span class="bc-mark">${esc(c.b.bank)}</span></div></div>`).join('')+
+    `<div class="bcard ${cards.length%2?'light':'dark'}"><div class="bc-top"><span>Kekayaan bersih</span><span>per ${fshort(e)}</span></div><div class="bc-bal"><small>Rp</small>${acc(n1.nw)}</div><div class="bc-num">Aset Rp ${short(n1.a)} · Utang Rp ${short(n1.l)}</div><div class="bc-foot"><span>${dl(n1.nw,n0.nw)}</span><span class="bc-mark">NW</span></div></div>`;
+  // donut
+  const PAL=['var(--c-rev)','var(--accent)','var(--c-nw)','#9ED3AE','#F0D58A','#F2B3A0','var(--rule-2)'];
+  const top=ex.slice(0,5), rest=ex.slice(5).reduce((a,x)=>a+x[1],0), segs=top.map(([c,v])=>({lab:AC(c).name,v})).concat(rest>0?[{lab:'Lainnya',v:rest}]:[]);
+  const R=78,C=2*Math.PI*R; let off=0; const tot=segs.reduce((a,x)=>a+x.v,0)||1;
+  const arcs=segs.map((g,i)=>{ const len=g.v/tot*C, gap=segs.length>1?Math.min(4,len*0.3):0; const el=`<circle cx="110" cy="110" r="${R}" fill="none" stroke="${PAL[i%PAL.length]}" stroke-width="26" stroke-dasharray="${Math.max(0,len-gap)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 110 110)"><title>${esc(g.lab)}: Rp ${rp(g.v)} (${pct(g.v,tot)})</title></circle>`; off+=len; return el; }).join('');
+  const donut=`<svg class="donut" viewBox="0 0 220 220" role="img" aria-label="Komposisi beban"><circle cx="110" cy="110" r="${R}" fill="none" stroke="var(--chip)" stroke-width="26"/>${arcs}
+    <text x="110" y="100" text-anchor="middle" font-size="12" fill="var(--ink-3)">Total beban</text><text x="110" y="124" text-anchor="middle" font-size="${t1.exp>=1e9?15:18}" font-weight="700" fill="var(--ink)">Rp ${short(t1.exp)}</text></svg>`;
+  const dleg=segs.map((g,i)=>`<span><i style="background:${PAL[i%PAL.length]}"></i><em>${esc(g.lab)}</em></span>`).join('');
+  // recent tx
+  const rec=S.txns.filter(t=>t.date>=s&&t.date<=e).slice().sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0).slice(0,6);
+  const recHtml=rec.length?rec.map(t=>`<div class="txi"><span class="tico ${catTone(t.cat)}">${icon(catIcon(t.cat))}</span><div class="tt"><b>${esc(t.desc)}</b><span>${esc(AC(t.cat).name)} · ${fshort(t.date)}</span></div><span class="ta ${t.dir==='in'?'up':''}">${t.dir==='in'?'+':'−'}${rp(t.amount)}</span></div>`).join(''):'<p class="muted small">Tidak ada transaksi pada periode ini.</p>';
+  const tile=(cls,l,v,d)=>`<div class="tile ${cls}"><span class="tl">${l}</span><span class="tv">${v}</span><span class="td">${d}</span></div>`;
+  return `<div class="dash"><div class="dash-main">
+    <section><div class="sec-h"><h3>Rekening</h3><span>${esc(label(U.key))}</span></div><div class="cards">${cardHtml}</div></section>
+    <nav class="qa" aria-label="Pintasan"><a class="on" href="#unggah"><span class="qi">${icon('upload')}</span>Unggah</a><a href="#transaksi" ${rv?'data-act="rvfilter"':''}><span class="qi">${icon('list')}</span>Transaksi${rv?`<span class="badge">${rv}</span>`:''}</a><a href="#posisi"><span class="qi">${icon('pie')}</span>Neraca</a><a href="#surplus"><span class="qi">${icon('bars')}</span>Surplus</a></nav>
+    <section><div class="sec-h"><h3>Ikhtisar ${esc(label(U.key))}</h3><span>${fdate(s)} – ${fdate(e)}</span></div><div class="tiles">
+      ${tile('p-mint','Pendapatan',`<small>Rp</small>${rp(t1.rev)}`,dl(t1.rev,t0.rev))}
+      ${tile('p-peach','Beban',`<small>Rp</small>${rp(t1.exp)}`,dl(t1.exp,t0.exp,true))}
+      ${tile('p-lav','Surplus (defisit)',`<span class="${t1.sur<0?'dn':''}"><small>Rp</small>${acc(t1.sur)}</span>`,dl(t1.sur,t0.sur))}
+      ${tile('p-cream','Rasio tabungan',t1.rev?(sr*100).toLocaleString('id-ID',{maximumFractionDigits:1})+'%':'–',t0.rev?'periode lalu '+(sr0*100).toLocaleString('id-ID',{maximumFractionDigits:1})+'%':'surplus ÷ pendapatan')}
+    </div><p class="small muted" style="margin:10px 2px 0">Pindah dana antar rekening, tarik tunai, dan pembelian investasi tidak dihitung sebagai pendapatan atau beban.</p></section>
+    <section class="sheet chartcard chart"><div class="sec-h" style="margin:0"><h3>Arus 12 bulan</h3><span>s.d. ${BLN[+e.slice(5,7)-1]} ${e.slice(0,4)}</span></div><div class="legend"><span><i style="background:var(--c-rev)"></i>Pendapatan</span><span><i style="background:var(--c-exp)"></i>Beban</span><span><i style="background:var(--c-nw)"></i>Kekayaan bersih (kanan)</span></div>${chart12(e)}</section>
+    ${rekapTable()}
   </div>
-  <div class="grid2">
-    <div class="sheet chart"><div class="eyebrow">12 bulan s.d. ${BLN[+e.slice(5,7)-1]} ${e.slice(0,4)}</div><div class="legend"><span><i style="background:var(--in)"></i>Pendapatan</span><span><i style="background:var(--out)"></i>Beban</span><span><i style="background:var(--accent)"></i>Kekayaan bersih (kanan)</span></div>${chart12(e)}</div>
-    <div class="sheet"><div class="eyebrow">Komposisi beban · ${esc(label(U.key))}</div>${top.length?`<div class="bars">${top.map(([c,v])=>`<div class="bar"><div class="lab"><span>${esc(AC(c).name)}</span><span class="num">${rp(v)} <span class="muted">${pct(v,t1.exp)}</span></span></div><div class="track"><div class="fill" style="width:${(v/mx*100).toFixed(1)}%"></div></div></div>`).join('')}</div>`:'<p class="muted">Tidak ada beban pada periode ini.</p>'}</div>
-  </div>
-  ${sumHtml}
-  <div class="sheet"><div class="eyebrow">Catatan pemeriksaan</div><div class="alerts">${al.map(([c,t])=>`<div class="alert"><span class="dot" style="background:${c}"></span><span>${t}</span></div>`).join('')}</div></div>`;
+  <aside class="stat"><div class="sh"><h3>Statistik beban</h3><span>${esc(shortLabel(U.key))} ${U.key.slice(0,4)}</span></div>
+    ${ex.length?donut+`<div class="dleg">${dleg}</div>`:'<p class="muted small">Tidak ada beban pada periode ini.</p>'}
+    <div class="sh" style="margin-top:4px"><h3 style="font-size:15px">Transaksi terbaru</h3><a class="small muted" href="#transaksi">Lihat semua</a></div>
+    <div class="txl">${recHtml}</div>
+    <div class="sh" style="margin-top:4px"><h3 style="font-size:15px">Catatan pemeriksaan</h3></div>
+    <div class="alerts" style="margin:0">${al.map(([c,t])=>`<div class="alert"><span class="dot" style="background:${c}"></span><span>${t}</span></div>`).join('')}</div>
+  </aside></div>`;
 }
 function rekapTable(){
   const [a,b]=dataRange(); if(!a) return '';
@@ -691,15 +899,15 @@ function chart12(end){
   const nws=pts.map(p=>p.nw); let nmin=Math.min(...nws),nmax=Math.max(...nws); if(nmax-nmin<1){nmax+=1;nmin-=1;} const span=nmax-nmin; nmin-=span*0.15; nmax+=span*0.15;
   const y=v=>T+ph-(v/mx)*ph, yn=v=>T+ph-((v-nmin)/(nmax-nmin))*ph, bw=pw/pts.length, b=Math.max(3,Math.min(16,(bw-8)/2));
   let g='';
-  for(let i=0;i<=4;i++){ const v=mx*i/4, yy=y(v); g+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--rule)" stroke-width="1"/><text x="${L-8}" y="${yy+4}" text-anchor="end" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono, monospace">${short(v)}</text>`;
-    const nvv=nmin+(nmax-nmin)*i/4; g+=`<text x="${W-R+8}" y="${yy+4}" font-size="11" fill="var(--accent)" font-family="IBM Plex Mono, monospace">${short(nvv)}</text>`; }
+  for(let i=0;i<=4;i++){ const v=mx*i/4, yy=y(v); g+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--ink)" stroke-opacity=".08" stroke-width="1"/><text x="${L-8}" y="${yy+4}" text-anchor="end" font-size="11" fill="var(--ink-3)">${short(v)}</text>`;
+    const nvv=nmin+(nmax-nmin)*i/4; g+=`<text x="${W-R+8}" y="${yy+4}" font-size="11" fill="var(--c-nw)">${short(nvv)}</text>`; }
   pts.forEach((p,i)=>{ const cx=L+bw*i+bw/2;
-    g+=`<rect x="${cx-b-1}" y="${y(p.rev)}" width="${b}" height="${Math.max(0,T+ph-y(p.rev))}" fill="var(--in)" rx="1.5"><title>${p.lab} ${p.yr} · Pendapatan Rp ${rp(p.rev)}</title></rect>`;
-    g+=`<rect x="${cx+1}" y="${y(p.exp)}" width="${b}" height="${Math.max(0,T+ph-y(p.exp))}" fill="var(--out)" rx="1.5"><title>${p.lab} ${p.yr} · Beban Rp ${rp(p.exp)}</title></rect>`;
+    g+=`<rect x="${cx-b-1}" y="${y(p.rev)}" width="${b}" height="${Math.max(0,T+ph-y(p.rev))}" fill="var(--c-rev)" rx="3"><title>${p.lab} ${p.yr} · Pendapatan Rp ${rp(p.rev)}</title></rect>`;
+    g+=`<rect x="${cx+1}" y="${y(p.exp)}" width="${b}" height="${Math.max(0,T+ph-y(p.exp))}" fill="var(--c-exp)" rx="3"><title>${p.lab} ${p.yr} · Beban Rp ${rp(p.exp)}</title></rect>`;
     g+=`<text x="${cx}" y="${H-10}" text-anchor="middle" font-size="11" fill="var(--ink-2)">${p.lab}${p.m===1||i===0?" '"+String(p.yr).slice(2):''}</text>`; });
   const path=pts.map((p,i)=>`${i?'L':'M'}${(L+bw*i+bw/2).toFixed(1)},${yn(p.nw).toFixed(1)}`).join(' ');
-  g+=`<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>`;
-  pts.forEach((p,i)=>{ g+=`<circle cx="${L+bw*i+bw/2}" cy="${yn(p.nw)}" r="${i===pts.length-1?4:2.5}" fill="${i===pts.length-1?'var(--accent)':'var(--sheet)'}" stroke="var(--accent)" stroke-width="1.5"><title>Kekayaan bersih akhir ${p.lab} ${p.yr}: Rp ${rp(p.nw)}</title></circle>`; });
+  g+=`<path d="${path}" fill="none" stroke="var(--c-nw)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  pts.forEach((p,i)=>{ g+=`<circle cx="${L+bw*i+bw/2}" cy="${yn(p.nw)}" r="${i===pts.length-1?4:2.5}" fill="${i===pts.length-1?'var(--c-nw)':'var(--sheet)'}" stroke="var(--c-nw)" stroke-width="1.5"><title>Kekayaan bersih akhir ${p.lab} ${p.yr}: Rp ${rp(p.nw)}</title></circle>`; });
   g+=`<line x1="${L}" x2="${W-R}" y1="${T+ph}" y2="${T+ph}" stroke="var(--rule-2)"/>`;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Pendapatan, beban, dan kekayaan bersih bulanan">${g}</svg>`;
 }
@@ -886,6 +1094,15 @@ function vAkun(){
   <div class="sheet"><div class="eyebrow">Aturan kategori yang Anda ajarkan</div>
   ${S.rules.length?`<div class="tw"><table class="data"><thead><tr><th>Kata kunci keterangan</th><th>Arah</th><th>Akun</th><th></th></tr></thead><tbody>${S.rules.map((r,i)=>`<tr><td class="mono small">${esc(r.key)}</td><td>${r.dir==='in'?'Masuk':'Keluar'}</td><td>${esc(AC(r.cat).name)}</td><td><button class="iconbtn" data-act="delrule" data-i="${i}">hapus</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Belum ada. Aturan terbentuk saat Anda mengubah kategori di halaman Transaksi.</p>'}
   </div>
+  <div class="sheet"><div class="eyebrow">Keamanan akun</div>
+  <p class="lede small">Masuk sebagai <b>${esc(SESSION.acct.name)}</b> (${esc(SESSION.acct.user)}). Data akun ini dienkripsi AES-256 dengan kunci dari kata sandi Anda dan terkunci otomatis setelah ${IDLE_MIN} menit tidak aktif.</p>
+  <div class="form" style="margin-top:12px">
+    <div class="field"><label for="cpOld">Kata sandi lama</label><input class="inp" type="password" id="cpOld" autocomplete="current-password"></div>
+    <div class="field"><label for="cpNew">Kata sandi baru</label><input class="inp" type="password" id="cpNew" autocomplete="new-password"></div>
+    <div class="field"><label for="cpNew2">Ulangi kata sandi baru</label><input class="inp" type="password" id="cpNew2" autocomplete="new-password"></div>
+    <button class="btn pri" data-act="chpw">Ganti kata sandi</button>
+  </div>
+  ${me()&&me().super?'<p class="small muted" style="margin-top:14px">Akun ini adalah super admin dan tidak dapat dihapus.</p>':'<div style="margin-top:14px"><button class="btn danger" data-act="delacct">Hapus akun ini</button></div>'}</div>
   <div class="sheet"><div class="eyebrow">Cadangan & ekspor</div>
   <p class="lede small">Simpan cadangan secara berkala. File cadangan JSON berisi seluruh transaksi, kategori, jurnal memorial, saldo awal, dan aturan, sehingga bisa dipulihkan di perangkat atau browser lain.</p>
   <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
@@ -978,6 +1195,13 @@ async function handleFiles(files){
 /* ---------- Events ---------- */
 document.addEventListener('click',async ev=>{
   const el=ev.target.closest('[data-act]'); if(!el) return; const a=el.dataset.act, id=el.dataset.id;
+  if(a==='acreate'){ adminCreate(); return; }
+  if(a==='arole'){ adminRole(id); return; }
+  if(a==='adel'){ if(el.classList.contains('armed')) adminDelete(id); else { el.classList.add('armed'); el.textContent='Klik lagi untuk menghapus'; setTimeout(()=>{ if(el.isConnected){ el.classList.remove('armed'); el.textContent='Hapus'; } },4000); } return; }
+  if(a==='authtab'){ authView(el.dataset.m); return; }
+  if(a==='logout'){ logout(); return; }
+  if(a==='chpw'){ changePassword(); return; }
+  if(a==='delacct'){ if(el.classList.contains('armed')) deleteAccount(); else { el.classList.add('armed'); el.textContent='Klik lagi untuk menghapus akun dan semua datanya'; } return; }
   if(a==='nav'){ setNav(!document.getElementById('side').classList.contains('open')); return; }
   if(a==='navclose'){ setNav(false); return; }
   if(a==='g'){ const [,e]=U.key?range(U.key):[0,dataRange()[1]]; U.g=el.dataset.g; U.key=e?keyFor(U.g,e):null; saveUI(); render(); }
@@ -1009,6 +1233,7 @@ const $v=id=>{ const e=document.getElementById(id); return e?e.value:''; };
 document.addEventListener('change',ev=>{
   const el=ev.target, a=el.dataset&&el.dataset.chg; if(!a) return;
   if(a==='key'){ U.key=el.value; render(); }
+  else if(a==='opensignup'){ if(isAdmin()){ setSettings({openSignup:el.checked}); toast(el.checked?'Pendaftaran mandiri dibuka.':'Pendaftaran mandiri ditutup.'); } }
   else if(a==='sub'){ U.key=U.key.slice(0,4)+'-'+el.value; render(); }
   else if(a==='year'){ const y=parseInt(el.value,10); if(!(y>=1000&&y<=9999)){ toast('Isi tahun 4 digit, misalnya 2027.'); el.value=U.key.slice(0,4); return; } U.key=U.g==='Y'?String(y):String(y)+U.key.slice(4); render(); }
   else if(a==='owner'){ S.owner=el.value.trim(); categorizeAll(); pairTransfers(); changed(); toast('Nama pemilik disimpan.'); }
@@ -1024,6 +1249,7 @@ document.addEventListener('change',ev=>{
       for(const o of S.txns){ if(o===t||o.src==='user'||o.dir!==t.dir||descKey(o.desc)!==k) continue; o.cat=t.cat; o.src='rule'; o.review=false; n++; } }
     changed(); renderSide(); renderTxRows(); toast(n?`Kategori diterapkan juga ke ${n} transaksi serupa.`:'Kategori disimpan.'); }
 });
+document.addEventListener('keydown',ev=>{ if(ev.target.id==='gsearch'&&ev.key==='Enter'){ ev.preventDefault(); U.f.q=ev.target.value.trim(); U.f.all=true; U.f.rv=false; U.tlim=400; if(location.hash==='#transaksi') render(); else location.hash='#transaksi'; } });
 let qT; document.addEventListener('input',ev=>{ if(ev.target.dataset&&ev.target.dataset.inp==='fq'){ clearTimeout(qT); qT=setTimeout(()=>{ U.f.q=ev.target.value; U.tlim=400; renderTxRows(); },180); } });
 document.addEventListener('keydown',ev=>{ if(ev.target.id==='drop'&&(ev.key==='Enter'||ev.key===' ')){ ev.preventDefault(); document.getElementById('fileIn').click(); } });
 document.getElementById('fileIn').addEventListener('change',ev=>{ const f=ev.target.files; if(f&&f.length) handleFiles(f); ev.target.value=''; });
@@ -1031,11 +1257,112 @@ document.getElementById('restoreIn').addEventListener('change',ev=>{ const f=ev.
 document.addEventListener('dragover',ev=>{ const d=ev.target.closest&&ev.target.closest('#drop'); if(d){ ev.preventDefault(); d.classList.add('over'); } });
 document.addEventListener('dragleave',ev=>{ const d=ev.target.closest&&ev.target.closest('#drop'); if(d) d.classList.remove('over'); });
 document.addEventListener('drop',ev=>{ const d=ev.target.closest&&ev.target.closest('#drop'); if(d){ ev.preventDefault(); d.classList.remove('over'); handleFiles(ev.dataTransfer.files); } });
-function route(){ const h=location.hash.replace('#',''); U.view=VIEW_IDS.includes(h)?h:'ringkasan'; render(); setNav(false); window.scrollTo(0,0); }
+function route(){ if(!SESSION) return; const h=location.hash.replace('#',''); U.view=VIEW_IDS.includes(h)?h:'ringkasan'; render(); setNav(false); window.scrollTo(0,0); }
+function renderUser(){ const n=esc(SESSION.acct.name.split(/\s+/)[0]); document.getElementById('userbox').innerHTML=`<span class="upill">${icon('users')}<span class="uname">${n}</span>${isAdmin()?`<span class="role">${me().super?'SUPER ADMIN':'ADMIN'}</span>`:''}<button class="ub" data-act="logout" title="Keluar" aria-label="Keluar">${icon('logout')}</button></span>`; }
+function authView(mode,msg,kind){
+  const acs=accounts(); const open=!acs.length||settings().openSignup; if(!mode) mode=acs.length?'login':'signup'; if(mode==='signup'&&!open) mode='login';
+  const legacy=!acs.length&&(()=>{ const o=load(); return o&&!o.sample&&o.txns&&o.txns.length?o.txns.length:0; })();
+  const m=msg?`<div class="auth-msg ${kind||'err'}">${esc(msg)}</div>`:'';
+  document.getElementById('auth').innerHTML=`<div class="auth-card"><div class="alogo">D</div><h1>Dana e-Statement</h1><p class="sub">Pembukuan pribadi dari rekening koran</p>
+  <div class="auth-tabs" role="tablist"><button role="tab" data-act="authtab" data-m="login" aria-selected="${mode==='login'}">Masuk</button>${open?`<button role="tab" data-act="authtab" data-m="signup" aria-selected="${mode==='signup'}">Buat akun</button>`:''}</div>
+  ${mode==='login'?`<form id="loginForm" autocomplete="on">${m}
+    <div class="field"><label for="lgUser">Nama pengguna</label><input class="inp" id="lgUser" autocomplete="username" autocapitalize="none" spellcheck="false" required value="${acs.length===1?esc(acs[0].user):''}"></div>
+    <div class="field"><label for="lgPass">Kata sandi</label><input class="inp" id="lgPass" type="password" autocomplete="current-password" required></div>
+    <button class="btn pri" type="submit" id="lgBtn">Masuk</button>
+    ${acs.length?(open?'':'<p class="small muted">Pendaftaran akun baru ditutup. Minta admin membuatkan akun untuk Anda.</p>'):'<p class="small muted">Belum ada akun di perangkat ini. Buat akun terlebih dahulu.</p>'}</form>`
+  :`<form id="signupForm" autocomplete="on">${m}
+    <div class="field"><label for="suName">Nama lengkap (sesuai rekening)</label><input class="inp" id="suName" autocomplete="name" required placeholder="mis. Ardana Rikza"></div>
+    <div class="field"><label for="suUser">Nama pengguna</label><input class="inp" id="suUser" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="huruf kecil, angka, titik"></div>
+    <div class="field"><label for="suPass">Kata sandi (minimal 8 karakter)</label><input class="inp" id="suPass" type="password" autocomplete="new-password" minlength="8" required></div>
+    <div class="field"><label for="suPass2">Ulangi kata sandi</label><input class="inp" id="suPass2" type="password" autocomplete="new-password" minlength="8" required></div>
+    ${legacy?`<div class="auth-msg info">Ditemukan ${legacy} transaksi tersimpan tanpa akun di browser ini. Data itu akan dipindahkan ke akun baru dan dienkripsi.</div>`:''}
+    <button class="btn pri" type="submit" id="suBtn">Buat akun</button></form>`}
+  <p class="auth-note">Data setiap akun dienkripsi AES-256 dan hanya tersimpan di perangkat ini. Kata sandi tidak dapat dipulihkan, jadi simpan cadangan JSON secara berkala.</p></div>`;
+  const f=document.getElementById(mode==='login'?(acs.length===1?'lgPass':'lgUser'):'suName'); if(f) setTimeout(()=>f.focus(),30);
+}
+function showAuth(mode,msg,kind){ document.getElementById('app').hidden=true; document.getElementById('auth').hidden=false; authView(mode,msg,kind); }
+function enterApp(acct,key,data){
+  SESSION={acct,key}; S=Object.assign(blank(),data||{}); _ent=null; _acc=null; _gaps=null; U.key=null; U.restore=null; U.pending=[];
+  afterLoad(); lastAct=Date.now(); fails=0;
+  document.getElementById('auth').hidden=true; document.getElementById('auth').innerHTML=''; document.getElementById('app').hidden=false;
+  persistNow(); route();
+}
+async function doLogin(){
+  if(Date.now()<lockUntil){ authView('login',`Terlalu banyak percobaan. Coba lagi dalam ${Math.ceil((lockUntil-Date.now())/1000)} detik.`); return; }
+  const u=$v('lgUser').trim().toLowerCase(), pw=$v('lgPass'); const btn=document.getElementById('lgBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Memeriksa…';
+  const acct=accounts().find(a=>a.user===u);
+  try{ if(!acct) throw 0; const key=await deriveKey(pw,unb64(acct.salt),acct.iter); const raw=localStorage.getItem(DATA_KEY+acct.id); let data=raw?await decObj(key,JSON.parse(raw)):blank(); if(acct.seed&&!(data.txns&&data.txns.length)){ const o=load(); if(o&&!o.sample&&o.txns&&o.txns.length){ data=Object.assign(o,{owner:data.owner||o.owner}); try{ localStorage.removeItem(LS); }catch(e){} } } const acs=accounts(); const x=acs.find(y=>y.id===acct.id); if(x){ x.lastLogin=new Date().toISOString(); setAccounts(acs); } enterApp(x||acct,key,data); }
+  catch(e){ fails++; if(fails>=5){ lockUntil=Date.now()+30000; fails=0; } authView('login','Nama pengguna atau kata sandi salah.'); const el=document.getElementById('lgUser'); if(el) el.value=u; }
+}
+async function doSignup(){
+  const name=$v('suName').trim(), u=$v('suUser').trim().toLowerCase(), p1=$v('suPass'), p2=$v('suPass2');
+  const err=m=>{ authView('signup',m); document.getElementById('suName').value=name; document.getElementById('suUser').value=u; };
+  if(accounts().length&&!settings().openSignup) return err('Pendaftaran akun baru ditutup oleh admin.');
+  const ve=validateNew(name,u,p1,p2); if(ve) return err(ve);
+  const btn=document.getElementById('suBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Membuat akun…';
+  const {acct,key}=await createAccount(name,u,p1,accounts().length?'user':'admin'); acct.lastLogin=acct.created;
+  let data=blank(); data.owner=name.toUpperCase();
+  const acs=accounts(); if(!acs.length){ const o=load(); if(o&&!o.sample&&o.txns&&o.txns.length){ data=o; if(!data.owner) data.owner=name.toUpperCase(); } }
+  const blob=await encObj(key,data);
+  try{ localStorage.setItem(DATA_KEY+acct.id,JSON.stringify(blob)); }catch(e){ return err('Browser menolak menyimpan data. Pastikan penyimpanan situs tidak diblokir.'); }
+  if(!setAccounts(acs.concat(acct))) return err('Browser menolak menyimpan akun.');
+  try{ localStorage.removeItem(LS); }catch(e){}
+  enterApp(acct,key,data); toast('Akun dibuat. Selamat datang, '+name+'.');
+}
+async function logout(msg){ if(SESSION){ clearTimeout(saveT); await persistNow(); } SESSION=null; S=blank(); _ent=null; _acc=null; _gaps=null; U.restore=null; U.pending=[]; setNav(false); showAuth('login',msg||'Anda sudah keluar.','info'); }
+async function changePassword(){
+  const o=$v('cpOld'), n1=$v('cpNew'), n2=$v('cpNew2');
+  if(n1.length<8){ toast('Kata sandi baru minimal 8 karakter.'); return; } if(n1!==n2){ toast('Ulangan kata sandi baru tidak sama.'); return; }
+  try{ const k0=await deriveKey(o,unb64(SESSION.acct.salt),SESSION.acct.iter); await decObj(k0,JSON.parse(localStorage.getItem(DATA_KEY+SESSION.acct.id))); }catch(e){ toast('Kata sandi lama salah.'); return; }
+  const salt=crypto.getRandomValues(new Uint8Array(16)); const key=await deriveKey(n1,salt,ITER);
+  const acs=accounts(); const a=acs.find(x=>x.id===SESSION.acct.id); a.salt=b64(salt); a.iter=ITER; SESSION={acct:a,key};
+  await persistNow(); setAccounts(acs); render(); toast('Kata sandi diganti.');
+}
+async function deleteAccount(){ const acs=accounts(), m=me(); if(m&&m.super){ toast('Super admin tidak dapat dihapus.'); render(); return; } if(m&&m.role==='admin'&&acs.filter(a=>a.role==='admin').length===1&&acs.length>1){ toast('Anda admin terakhir. Jadikan akun lain admin dulu di Daftar Akun.'); render(); return; } const id=SESSION.acct.id; SESSION=null; try{ localStorage.removeItem(DATA_KEY+id); }catch(e){} setAccounts(accounts().filter(a=>a.id!==id)); S=blank(); showAuth(null,'Akun dan seluruh datanya telah dihapus dari perangkat ini.','info'); }
+function adminDelete(id){ if(!isAdmin()) return; if(id===SESSION.acct.id){ toast('Hapus akun sendiri lewat Bagan Akun → Keamanan akun.'); return; }
+  const acs=accounts(), t=acs.find(a=>a.id===id); if(!t) return; if(t.super){ toast('Super admin tidak dapat dihapus.'); return; } if(t.role==='admin'&&acs.filter(a=>a.role==='admin').length===1){ toast('Tidak bisa menghapus admin terakhir.'); return; }
+  try{ localStorage.removeItem(DATA_KEY+id); }catch(e){} setAccounts(acs.filter(a=>a.id!==id)); render(); toast('Akun '+t.user+' dan datanya dihapus.'); }
+function adminRole(id){ if(!isAdmin()) return; const acs=accounts(), t=acs.find(a=>a.id===id); if(!t) return; if(t.super){ toast('Peran super admin tidak dapat diubah.'); return; }
+  if(t.role==='admin'){ if(acs.filter(a=>a.role==='admin').length===1){ toast('Harus ada minimal satu admin.'); return; } t.role='user'; } else t.role='admin';
+  setAccounts(acs); render(); toast(t.user+' sekarang '+(t.role==='admin'?'admin':'pengguna')+'.'); if(id===SESSION.acct.id&&t.role!=='admin'){ location.hash='#ringkasan'; } }
+async function adminCreate(){ if(!isAdmin()) return; const name=$v('acName').trim(), u=$v('acUser').trim().toLowerCase(), p1=$v('acPass'), p2=$v('acPass2'), role=$v('acRole')||'user';
+  const ve=validateNew(name,u,p1,p2); if(ve){ toast(ve); return; }
+  const {acct,key}=await createAccount(name,u,p1,role); const data=blank(); data.owner=name.toUpperCase();
+  try{ localStorage.setItem(DATA_KEY+acct.id,JSON.stringify(await encObj(key,data))); }catch(e){ toast('Browser menolak menyimpan akun.'); return; }
+  setAccounts(accounts().concat(acct)); render(); toast('Akun '+u+' dibuat. Berikan kata sandinya kepada pemilik akun.'); }
+function vDaftar(){
+  if(!isAdmin()) return `<div class="sheet empty"><div class="h2">Khusus admin</div><p>Halaman ini hanya dapat dibuka oleh akun admin.</p></div>`;
+  const acs=accounts().slice().sort((a,b)=>(a.created||'')<(b.created||'')?-1:1), na=acs.filter(a=>a.role==='admin').length, st=settings();
+  return `<div class="sheet"><div class="headrow"><div><h2 class="h2">Daftar akun</h2><p class="lede">${acs.length} akun terdaftar di perangkat ini, ${na} di antaranya admin. Admin dapat menambah, mengubah peran, dan menghapus akun, tetapi tidak dapat membuka isi pembukuan akun lain karena setiap akun terenkripsi dengan kata sandinya sendiri.</p></div></div>
+  <div class="tw"><table class="data"><thead><tr><th>Nama</th><th>Nama pengguna</th><th>Peran</th><th>Dibuat</th><th>Terakhir masuk</th><th class="num">Ukuran data</th><th></th></tr></thead><tbody>
+  ${acs.map(a=>{ const self=a.id===SESSION.acct.id, last=a.role==='admin'&&na===1; return `<tr><td>${esc(a.name)}${self?'<span class="tag pair">Anda</span>':''}</td><td class="mono small">${esc(a.user)}</td><td>${a.super?'<span class="tag rv">Super admin</span>':a.role==='admin'?'<span class="tag rv">Admin</span>':'<span class="tag">Pengguna</span>'}</td><td class="small">${fdt(a.created)}</td><td class="small">${fdt(a.lastLogin)}</td><td class="num small">${(blobSize(a.id)/1024).toLocaleString('id-ID',{maximumFractionDigits:1})} KB</td>
+  <td style="white-space:nowrap">${a.super?'<span class="small muted">terlindungi</span>':last?'<span class="small muted">admin terakhir</span>':`<button class="btn sm" data-act="arole" data-id="${a.id}">${a.role==='admin'?'Jadikan pengguna':'Jadikan admin'}</button>`} ${self||a.super?'':`<button class="btn sm danger" data-act="adel" data-id="${a.id}">Hapus</button>`}</td></tr>`; }).join('')}
+  </tbody></table></div></div>
+  <div class="sheet"><div class="eyebrow">Tambah akun</div><p class="lede small">Buat akun untuk orang lain, lalu berikan nama pengguna dan kata sandinya. Pemilik akun sebaiknya segera mengganti kata sandi setelah masuk pertama kali.</p>
+  <div class="form" style="margin-top:12px">
+    <div class="field" style="flex:1 1 200px"><label for="acName">Nama lengkap</label><input class="inp" id="acName" autocomplete="off"></div>
+    <div class="field"><label for="acUser">Nama pengguna</label><input class="inp" id="acUser" autocomplete="off" autocapitalize="none" spellcheck="false"></div>
+    <div class="field"><label for="acPass">Kata sandi awal</label><input class="inp" type="password" id="acPass" autocomplete="new-password"></div>
+    <div class="field"><label for="acPass2">Ulangi kata sandi</label><input class="inp" type="password" id="acPass2" autocomplete="new-password"></div>
+    <div class="field"><label for="acRole">Peran</label><select class="inp" id="acRole"><option value="user">Pengguna</option><option value="admin">Admin</option></select></div>
+    <button class="btn pri" data-act="acreate">Buat akun</button>
+  </div></div>
+  <div class="sheet"><div class="eyebrow">Pendaftaran mandiri</div>
+  <label class="chk" style="margin-top:10px"><input type="checkbox" data-chg="opensignup"${st.openSignup?' checked':''}> Izinkan pengunjung membuat akun sendiri dari layar masuk</label>
+  <p class="small muted" style="margin-top:6px">Jika dimatikan, tab “Buat akun” disembunyikan dan akun baru hanya bisa dibuat oleh admin di halaman ini.</p></div>`;
+}
+function bootAuth(){
+  if(!(window.crypto&&crypto.subtle)){ document.getElementById('auth').innerHTML='<div class="auth-card"><h1>Dana e-Statement</h1><p class="auth-msg err">Browser ini tidak mendukung enkripsi. Buka situs lewat alamat https dengan browser terbaru.</p></div>'; return; }
+  seedAccount();
+  showAuth(null);
+  ['pointerdown','keydown','wheel','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{ lastAct=Date.now(); },{passive:true}));
+  setInterval(()=>{ if(SESSION&&Date.now()-lastAct>IDLE_MIN*60000) logout('Sesi dikunci otomatis setelah '+IDLE_MIN+' menit tidak aktif.'); },20000);
+}
+document.addEventListener('submit',ev=>{ ev.preventDefault(); if(ev.target.id==='loginForm') doLogin(); else if(ev.target.id==='signupForm') doSignup(); });
 document.getElementById('side').addEventListener('click',ev=>{ if(ev.target.closest('a[href^="#"]')) setNav(false); });
 document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'&&document.getElementById('side').classList.contains('open')) setNav(false); });
 window.addEventListener('hashchange',route);
-route();
+bootAuth();
 </script>
 
 </html>
