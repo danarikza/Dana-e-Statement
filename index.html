@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script>window.DANA_STANDALONE=true;</script>
+<script>
+window.DANA_STANDALONE=true;
+/* ===================== PENGATURAN SERVER SUPABASE =====================
+   Isi dua nilai di bawah dari Supabase → Project Settings → API Keys.
+   Biarkan kosong ("") untuk memakai mode lokal (data hanya di browser).
+   ===================================================================== */
+window.DANA_CONFIG = {
+  supabaseUrl: "",
+  supabaseAnonKey: ""
+};
+</script>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Dana e-Statement</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -204,6 +214,7 @@ td.num,th.num{text-align:right;white-space:nowrap}
 .tag{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:1px;background:var(--chip);color:var(--ink-2)}
 .tag.rv{background:var(--p-peach);color:var(--p-peach-ink)}
 .tag.pair{background:var(--p-sky);color:var(--p-sky-ink)}
+.tag.p-mint{background:var(--p-mint);color:var(--p-mint-ink)} .tag.p-sky{background:var(--p-sky);color:var(--p-sky-ink)} .tag.p-peach{background:var(--p-peach);color:var(--p-peach-ink)} .tag.p-cream{background:var(--p-cream);color:var(--p-cream-ink)}
 tr.rv td:first-child{box-shadow:inset 3px 0 0 var(--p-peach-ink)}
 td.in{color:var(--in);font-weight:600} td.out{color:var(--out);font-weight:600}
 select.cat{border:1px solid var(--rule-2);background:var(--sheet);border-radius:8px;padding:4px 7px;max-width:240px;font-size:12.5px}
@@ -267,6 +278,7 @@ details.more summary{cursor:pointer;font-weight:600}
 .auth-msg{font-size:13px;padding:9px 12px;border-radius:12px}
 .auth-msg.err{background:var(--p-peach);color:var(--p-peach-ink)}
 .auth-msg.info{background:var(--p-sky);color:var(--p-sky-ink)}
+.auth-card h3{font-size:17px;font-weight:700;letter-spacing:-.01em}
 .auth-note{font-size:12px;color:var(--ink-2);margin-top:16px;line-height:1.55}
 
 @media (prefers-reduced-motion: reduce){.spin{animation:none}.drop{transition:none}.side,.side.open{transition:none}}
@@ -595,7 +607,7 @@ function seedAccount(){ let a=[]; try{ a=JSON.parse(localStorage.getItem(ACC_KEY
 const SET_KEY='danaes.settings.v1';
 function settings(){ try{ return Object.assign({openSignup:true},JSON.parse(localStorage.getItem(SET_KEY)||'{}')); }catch(e){ return {openSignup:true}; } }
 function setSettings(o){ try{ localStorage.setItem(SET_KEY,JSON.stringify(Object.assign(settings(),o))); }catch(e){} }
-const me=()=>SESSION&&accounts().find(a=>a.id===SESSION.acct.id);
+const me=()=>SESSION&&(SESSION.cloud?SESSION.acct:accounts().find(a=>a.id===SESSION.acct.id));
 const isAdmin=()=>{ const m=me(); return !!(m&&m.role==='admin'); };
 const blobSize=id=>{ try{ return (localStorage.getItem(DATA_KEY+id)||'').length; }catch(e){ return 0; } };
 const fdt=s=>{ if(!s) return '–'; const d=new Date(s); return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); };
@@ -604,8 +616,8 @@ async function createAccount(name,u,pw,role){ const salt=crypto.getRandomValues(
 function validateNew(name,u,p1,p2){ if(!name) return 'Isi nama lengkap.'; if(!/^[a-z0-9._-]{3,32}$/.test(u)) return 'Nama pengguna 3–32 karakter: huruf kecil, angka, titik, garis bawah, atau tanda hubung.';
   if(accounts().some(a=>a.user===u)) return 'Nama pengguna sudah dipakai di perangkat ini.'; if(p1.length<8) return 'Kata sandi minimal 8 karakter.'; if(p1!==p2) return 'Ulangan kata sandi tidak sama.'; return null; }
 function setAccounts(a){ try{ localStorage.setItem(ACC_KEY,JSON.stringify(a)); return true; }catch(e){ return false; } }
-async function persistNow(){ if(!SESSION) return; const blob=await encObj(SESSION.key,S); try{ localStorage.setItem(DATA_KEY+SESSION.acct.id,JSON.stringify(blob)); }catch(e){ toast('Penyimpanan browser penuh. Unduh cadangan JSON sekarang.'); } }
-function save(){ if(!SESSION) return; clearTimeout(saveT); const sess=SESSION; saveT=setTimeout(()=>{ if(SESSION===sess) persistNow(); },250); }
+async function persistNow(){ if(!SESSION) return; if(SESSION.cloud) return persistCloud(); const blob=await encObj(SESSION.key,S); try{ localStorage.setItem(DATA_KEY+SESSION.acct.id,JSON.stringify(blob)); }catch(e){ toast('Penyimpanan browser penuh. Unduh cadangan JSON sekarang.'); } }
+function save(){ if(!SESSION) return; PENDING=true; clearTimeout(saveT); const sess=SESSION; saveT=setTimeout(()=>{ saveT=null; if(SESSION===sess) persistNow(); },SESSION.cloud?1200:250); }
 function makeSample(){
   const st=blank(); st.sample=true;
   st.banks=[{id:'BCA-4821',bank:'BCA',last4:'4821'},{id:'Jago-0197',bank:'Jago',last4:'0197'}];
@@ -1095,13 +1107,14 @@ function vAkun(){
   ${S.rules.length?`<div class="tw"><table class="data"><thead><tr><th>Kata kunci keterangan</th><th>Arah</th><th>Akun</th><th></th></tr></thead><tbody>${S.rules.map((r,i)=>`<tr><td class="mono small">${esc(r.key)}</td><td>${r.dir==='in'?'Masuk':'Keluar'}</td><td>${esc(AC(r.cat).name)}</td><td><button class="iconbtn" data-act="delrule" data-i="${i}">hapus</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">Belum ada. Aturan terbentuk saat Anda mengubah kategori di halaman Transaksi.</p>'}
   </div>
   <div class="sheet"><div class="eyebrow">Keamanan akun</div>
-  <p class="lede small">Masuk sebagai <b>${esc(SESSION.acct.name)}</b> (${esc(SESSION.acct.user)}). Data akun ini dienkripsi AES-256 dengan kunci dari kata sandi Anda dan terkunci otomatis setelah ${IDLE_MIN} menit tidak aktif.</p>
+  ${SESSION.cloud?`<p class="lede small">Masuk sebagai <b>${esc(SESSION.acct.name)}</b> (${esc(SESSION.acct.email)}). Data disimpan terenkripsi AES-256 di server ${esc(sbHost())} dan tersinkron di semua perangkat. Sesi terkunci otomatis setelah ${IDLE_MIN} menit tidak aktif.</p>`:`<p class="lede small">Masuk sebagai <b>${esc(SESSION.acct.name)}</b> (${esc(SESSION.acct.user)}). Data akun ini dienkripsi AES-256 dengan kunci dari kata sandi Anda dan terkunci otomatis setelah ${IDLE_MIN} menit tidak aktif.</p>`}
   <div class="form" style="margin-top:12px">
     <div class="field"><label for="cpOld">Kata sandi lama</label><input class="inp" type="password" id="cpOld" autocomplete="current-password"></div>
     <div class="field"><label for="cpNew">Kata sandi baru</label><input class="inp" type="password" id="cpNew" autocomplete="new-password"></div>
     <div class="field"><label for="cpNew2">Ulangi kata sandi baru</label><input class="inp" type="password" id="cpNew2" autocomplete="new-password"></div>
     <button class="btn pri" data-act="chpw">Ganti kata sandi</button>
   </div>
+  ${SESSION.cloud?`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--rule)"><div class="eyebrow">Kode pemulihan</div><p class="small muted" style="margin:6px 0 10px">Dibutuhkan untuk membuka data jika kata sandi diatur ulang lewat email. Jika kode lama hilang, buat kode baru; kode lama langsung tidak berlaku.</p>${U.newRc?`<div style="font:700 16px/1.4 ui-monospace,Menlo,monospace;letter-spacing:.04em;background:var(--p-cream);color:#3d2f08;border-radius:14px;padding:12px 14px;display:inline-block;user-select:all">${esc(U.newRc)}</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-act="copynewrc">Salin kode</button><button class="btn sm" data-act="hidenewrc">Sudah saya simpan</button></div>`:'<button class="btn" data-act="cregenrc">Buat kode pemulihan baru</button>'}</div>`:''}
   ${me()&&me().super?'<p class="small muted" style="margin-top:14px">Akun ini adalah super admin dan tidak dapat dihapus.</p>':'<div style="margin-top:14px"><button class="btn danger" data-act="delacct">Hapus akun ini</button></div>'}</div>
   <div class="sheet"><div class="eyebrow">Cadangan & ekspor</div>
   <p class="lede small">Simpan cadangan secara berkala. File cadangan JSON berisi seluruh transaksi, kategori, jurnal memorial, saldo awal, dan aturan, sehingga bisa dipulihkan di perangkat atau browser lain.</p>
@@ -1112,8 +1125,9 @@ function vAkun(){
   </div>
   ${U.restore?`<div class="pw" style="margin-top:12px"><span>Ganti seluruh data saat ini dengan cadangan <b>${esc(U.restore.name)}</b> (${U.restore.state.txns.length} transaksi, dibuat ${esc(U.restore.when)})?</span><button class="btn pri sm" data-act="restoreok">Pulihkan</button><button class="btn sm" data-act="restorecancel">Batal</button></div>`:''}
   ${STANDALONE?'<p class="small muted" style="margin-top:10px">File Excel memuat sheet Rekap, Transaksi, Jurnal Umum, Buku Besar, Neraca Saldo, Posisi Keuangan, Surplus Defisit, Arus Kas, Laporan Periodik, dan Bagan Akun untuk periode yang dipilih.</p>':'<p class="small muted" style="margin-top:10px">Di halaman ini cadangan disalin ke clipboard; tempel ke file teks dan simpan dengan akhiran .json. Unduhan langsung dan ekspor Excel tersedia di versi hosting sendiri.</p>'}
+  ${SESSION.cloud&&accounts().length?`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--rule)"><div class="eyebrow">Pindahkan data dari mode lokal</div><p class="small muted" style="margin:6px 0 0">Browser ini masih menyimpan ${accounts().length} akun mode lokal. Masukkan nama pengguna dan kata sandi akun lokal untuk memindahkan pembukuannya ke akun cloud ini.</p><div class="form" style="margin-top:10px"><div class="field"><label for="mgUser">Nama pengguna lokal</label><input class="inp" id="mgUser" autocomplete="off" autocapitalize="none" value="${esc((accounts()[0]||{}).user||'')}"></div><div class="field"><label for="mgPass">Kata sandi lokal</label><input class="inp" type="password" id="mgPass" autocomplete="off"></div><button class="btn pri" data-act="cmigrate">Pindahkan ke cloud</button></div></div>`:''}
   <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn danger" data-act="reset">${U.armReset?'Klik sekali lagi untuk menghapus semua data':'Hapus semua data'}</button>${!S.sample?'<button class="btn" data-act="sample">Muat data contoh</button>':''}</div>
-  <p class="small muted">Data tersimpan hanya di browser ini. Membersihkan data situs atau berganti perangkat akan mengosongkan pembukuan, jadi simpan cadangan JSON secara berkala.</p></div>`;
+  <p class="small muted">${SESSION.cloud?'Data tersimpan terenkripsi di server dan tersinkron otomatis di semua perangkat. Cadangan JSON tetap disarankan sebagai salinan pribadi; file JSON tidak terenkripsi.':'Data tersimpan hanya di browser ini. Membersihkan data situs atau berganti perangkat akan mengosongkan pembukuan, jadi simpan cadangan JSON secara berkala.'}</p></div>`;
 }
 
 /* ---------- Backup, restore & Excel ---------- */
@@ -1195,13 +1209,25 @@ async function handleFiles(files){
 /* ---------- Events ---------- */
 document.addEventListener('click',async ev=>{
   const el=ev.target.closest('[data-act]'); if(!el) return; const a=el.dataset.act, id=el.dataset.id;
-  if(a==='acreate'){ adminCreate(); return; }
-  if(a==='arole'){ adminRole(id); return; }
-  if(a==='adel'){ if(el.classList.contains('armed')) adminDelete(id); else { el.classList.add('armed'); el.textContent='Klik lagi untuk menghapus'; setTimeout(()=>{ if(el.isConnected){ el.classList.remove('armed'); el.textContent='Hapus'; } },4000); } return; }
+  if(a==='acreate'){ CLOUD?cAdminCreate():adminCreate(); return; }
+  if(a==='arole'){ CLOUD?cAdminRole(id,el.dataset.r):adminRole(id); return; }
+  if(a==='areset'){ cAdminReset(id); return; }
+  if(a==='admreload'){ U.adm=null; render(); return; }
+  if(a==='cauthtab'||a==='cmode'){ cloudAuthView(el.dataset.m); return; }
+  if(a==='clogout'){ CTX=null; try{ SB.auth.signOut(); }catch(e){} cloudAuthView('login'); return; }
+  if(a==='copyrc'){ copyText(CTX&&CTX.newRc||'','Kode pemulihan tersalin.'); return; }
+  if(a==='rcdone'){ if(!document.getElementById('rcOk').checked){ toast('Centang dulu bahwa Anda sudah menyimpan kode pemulihan.'); return; } const r=CTX; CTX=null; cloudEnter(r); toast('Selamat datang, '+r.acct.name+'.'); return; }
+  if(a==='cregenrc'){ cRegenRc(); return; }
+  if(a==='copynewrc'){ copyText(U.newRc||'','Kode pemulihan tersalin.'); return; }
+  if(a==='hidenewrc'){ U.newRc=null; render(); return; }
+  if(a==='cmigrate'){ cMigrateLocal(el); return; }
+  if(a==='cloudon'){ const url=$v('cfgUrl').trim().replace(/\/+$/,''), key=$v('cfgKey').trim(); if(!/^https:\/\/[^\s]+$/.test(url)||key.length<20){ toast('Isi Project URL (https://…supabase.co) dan anon key dengan benar.'); return; } try{ localStorage.setItem(CLOUD_LS,JSON.stringify({url,key})); }catch(e){} location.reload(); return; }
+  if(a==='cloudoff'){ ev.preventDefault(); try{ localStorage.removeItem(CLOUD_LS); }catch(e){} location.href=redirectUrl(); return; }
+  if(a==='adel'){ if(el.classList.contains('armed')) (CLOUD?cAdminDelete(id):adminDelete(id)); else { el.classList.add('armed'); el.textContent='Klik lagi untuk menghapus'; setTimeout(()=>{ if(el.isConnected){ el.classList.remove('armed'); el.textContent='Hapus'; } },4000); } return; }
   if(a==='authtab'){ authView(el.dataset.m); return; }
   if(a==='logout'){ logout(); return; }
-  if(a==='chpw'){ changePassword(); return; }
-  if(a==='delacct'){ if(el.classList.contains('armed')) deleteAccount(); else { el.classList.add('armed'); el.textContent='Klik lagi untuk menghapus akun dan semua datanya'; } return; }
+  if(a==='chpw'){ CLOUD?cChangePassword():changePassword(); return; }
+  if(a==='delacct'){ if(el.classList.contains('armed')) (CLOUD?cDeleteOwn():deleteAccount()); else { el.classList.add('armed'); el.textContent='Klik lagi untuk menghapus akun dan semua datanya'; } return; }
   if(a==='nav'){ setNav(!document.getElementById('side').classList.contains('open')); return; }
   if(a==='navclose'){ setNav(false); return; }
   if(a==='g'){ const [,e]=U.key?range(U.key):[0,dataRange()[1]]; U.g=el.dataset.g; U.key=e?keyFor(U.g,e):null; saveUI(); render(); }
@@ -1233,7 +1259,7 @@ const $v=id=>{ const e=document.getElementById(id); return e?e.value:''; };
 document.addEventListener('change',ev=>{
   const el=ev.target, a=el.dataset&&el.dataset.chg; if(!a) return;
   if(a==='key'){ U.key=el.value; render(); }
-  else if(a==='opensignup'){ if(isAdmin()){ setSettings({openSignup:el.checked}); toast(el.checked?'Pendaftaran mandiri dibuka.':'Pendaftaran mandiri ditutup.'); } }
+  else if(a==='opensignup'){ if(isAdmin()&&CLOUD){ cSetOpen(el.checked); } else if(isAdmin()){ setSettings({openSignup:el.checked}); toast(el.checked?'Pendaftaran mandiri dibuka.':'Pendaftaran mandiri ditutup.'); } }
   else if(a==='sub'){ U.key=U.key.slice(0,4)+'-'+el.value; render(); }
   else if(a==='year'){ const y=parseInt(el.value,10); if(!(y>=1000&&y<=9999)){ toast('Isi tahun 4 digit, misalnya 2027.'); el.value=U.key.slice(0,4); return; } U.key=U.g==='Y'?String(y):String(y)+U.key.slice(4); render(); }
   else if(a==='owner'){ S.owner=el.value.trim(); categorizeAll(); pairTransfers(); changed(); toast('Nama pemilik disimpan.'); }
@@ -1258,7 +1284,7 @@ document.addEventListener('dragover',ev=>{ const d=ev.target.closest&&ev.target.
 document.addEventListener('dragleave',ev=>{ const d=ev.target.closest&&ev.target.closest('#drop'); if(d) d.classList.remove('over'); });
 document.addEventListener('drop',ev=>{ const d=ev.target.closest&&ev.target.closest('#drop'); if(d){ ev.preventDefault(); d.classList.remove('over'); handleFiles(ev.dataTransfer.files); } });
 function route(){ if(!SESSION) return; const h=location.hash.replace('#',''); U.view=VIEW_IDS.includes(h)?h:'ringkasan'; render(); setNav(false); window.scrollTo(0,0); }
-function renderUser(){ const n=esc(SESSION.acct.name.split(/\s+/)[0]); document.getElementById('userbox').innerHTML=`<span class="upill">${icon('users')}<span class="uname">${n}</span>${isAdmin()?`<span class="role">${me().super?'SUPER ADMIN':'ADMIN'}</span>`:''}<button class="ub" data-act="logout" title="Keluar" aria-label="Keluar">${icon('logout')}</button></span>`; }
+function renderUser(){ const n=esc(SESSION.acct.name.split(/\s+/)[0]); document.getElementById('userbox').innerHTML=`${syncHtml()}<span class="upill">${icon('users')}<span class="uname">${n}</span>${isAdmin()?`<span class="role">${me().super?'SUPER ADMIN':'ADMIN'}</span>`:''}<button class="ub" data-act="logout" title="Keluar" aria-label="Keluar">${icon('logout')}</button></span>`; }
 function authView(mode,msg,kind){
   const acs=accounts(); const open=!acs.length||settings().openSignup; if(!mode) mode=acs.length?'login':'signup'; if(mode==='signup'&&!open) mode='login';
   const legacy=!acs.length&&(()=>{ const o=load(); return o&&!o.sample&&o.txns&&o.txns.length?o.txns.length:0; })();
@@ -1277,15 +1303,15 @@ function authView(mode,msg,kind){
     <div class="field"><label for="suPass2">Ulangi kata sandi</label><input class="inp" id="suPass2" type="password" autocomplete="new-password" minlength="8" required></div>
     ${legacy?`<div class="auth-msg info">Ditemukan ${legacy} transaksi tersimpan tanpa akun di browser ini. Data itu akan dipindahkan ke akun baru dan dienkripsi.</div>`:''}
     <button class="btn pri" type="submit" id="suBtn">Buat akun</button></form>`}
-  <p class="auth-note">Data setiap akun dienkripsi AES-256 dan hanya tersimpan di perangkat ini. Kata sandi tidak dapat dipulihkan, jadi simpan cadangan JSON secara berkala.</p></div>`;
+  <p class="auth-note">Data setiap akun dienkripsi AES-256 dan hanya tersimpan di perangkat ini. Kata sandi tidak dapat dipulihkan, jadi simpan cadangan JSON secara berkala.</p>${cloudSetupHtml()}</div>`;
   const f=document.getElementById(mode==='login'?(acs.length===1?'lgPass':'lgUser'):'suName'); if(f) setTimeout(()=>f.focus(),30);
 }
-function showAuth(mode,msg,kind){ document.getElementById('app').hidden=true; document.getElementById('auth').hidden=false; authView(mode,msg,kind); }
-function enterApp(acct,key,data){
-  SESSION={acct,key}; S=Object.assign(blank(),data||{}); _ent=null; _acc=null; _gaps=null; U.key=null; U.restore=null; U.pending=[];
+function showAuth(mode,msg,kind){ if(CLOUD) return cloudAuthView(mode,msg,kind); document.getElementById('app').hidden=true; document.getElementById('auth').hidden=false; authView(mode,msg,kind); }
+function enterApp(acct,key,data,extra){
+  SESSION=Object.assign({acct,key},extra||{}); U.adm=null; U.newRc=null; PENDING=false; S=Object.assign(blank(),data||{}); _ent=null; _acc=null; _gaps=null; U.key=null; U.restore=null; U.pending=[];
   afterLoad(); lastAct=Date.now(); fails=0;
   document.getElementById('auth').hidden=true; document.getElementById('auth').innerHTML=''; document.getElementById('app').hidden=false;
-  persistNow(); route();
+  if(!SESSION.cloud) persistNow(); route();
 }
 async function doLogin(){
   if(Date.now()<lockUntil){ authView('login',`Terlalu banyak percobaan. Coba lagi dalam ${Math.ceil((lockUntil-Date.now())/1000)} detik.`); return; }
@@ -1309,7 +1335,7 @@ async function doSignup(){
   try{ localStorage.removeItem(LS); }catch(e){}
   enterApp(acct,key,data); toast('Akun dibuat. Selamat datang, '+name+'.');
 }
-async function logout(msg){ if(SESSION){ clearTimeout(saveT); await persistNow(); } SESSION=null; S=blank(); _ent=null; _acc=null; _gaps=null; U.restore=null; U.pending=[]; setNav(false); showAuth('login',msg||'Anda sudah keluar.','info'); }
+async function logout(msg){ if(CLOUD) return cloudLogout(msg); if(SESSION){ clearTimeout(saveT); await persistNow(); } SESSION=null; S=blank(); _ent=null; _acc=null; _gaps=null; U.restore=null; U.pending=[]; setNav(false); showAuth('login',msg||'Anda sudah keluar.','info'); }
 async function changePassword(){
   const o=$v('cpOld'), n1=$v('cpNew'), n2=$v('cpNew2');
   if(n1.length<8){ toast('Kata sandi baru minimal 8 karakter.'); return; } if(n1!==n2){ toast('Ulangan kata sandi baru tidak sama.'); return; }
@@ -1331,6 +1357,7 @@ async function adminCreate(){ if(!isAdmin()) return; const name=$v('acName').tri
   try{ localStorage.setItem(DATA_KEY+acct.id,JSON.stringify(await encObj(key,data))); }catch(e){ toast('Browser menolak menyimpan akun.'); return; }
   setAccounts(accounts().concat(acct)); render(); toast('Akun '+u+' dibuat. Berikan kata sandinya kepada pemilik akun.'); }
 function vDaftar(){
+  if(CLOUD) return vDaftarCloud();
   if(!isAdmin()) return `<div class="sheet empty"><div class="h2">Khusus admin</div><p>Halaman ini hanya dapat dibuka oleh akun admin.</p></div>`;
   const acs=accounts().slice().sort((a,b)=>(a.created||'')<(b.created||'')?-1:1), na=acs.filter(a=>a.role==='admin').length, st=settings();
   return `<div class="sheet"><div class="headrow"><div><h2 class="h2">Daftar akun</h2><p class="lede">${acs.length} akun terdaftar di perangkat ini, ${na} di antaranya admin. Admin dapat menambah, mengubah peran, dan menghapus akun, tetapi tidak dapat membuka isi pembukuan akun lain karena setiap akun terenkripsi dengan kata sandinya sendiri.</p></div></div>
@@ -1351,14 +1378,221 @@ function vDaftar(){
   <label class="chk" style="margin-top:10px"><input type="checkbox" data-chg="opensignup"${st.openSignup?' checked':''}> Izinkan pengunjung membuat akun sendiri dari layar masuk</label>
   <p class="small muted" style="margin-top:6px">Jika dimatikan, tab “Buat akun” disembunyikan dan akun baru hanya bisa dibuat oleh admin di halaman ini.</p></div>`;
 }
+/* ---------- Supabase (mode cloud) ---------- */
+const CLOUD_LS='danaes.cloud.v1', SB_JS='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
+let CLOUD=false, SB=null, CLOUD_OPEN=true, CTX=null, SAVING=false, PENDING=false, SYNC='ok', RECOVERY=false;
+function cloudCfg(){ const c=window.DANA_CONFIG||{}; if(c.supabaseUrl&&c.supabaseAnonKey) return {url:String(c.supabaseUrl).trim(),key:String(c.supabaseAnonKey).trim(),src:'file'};
+  try{ const o=JSON.parse(localStorage.getItem(CLOUD_LS)||'null'); if(o&&o.url&&o.key) return {url:o.url,key:o.key,src:'local'}; }catch(e){} return null; }
+const sbHost=()=>{ try{ return new URL(cloudCfg().url).host; }catch(e){ return ''; } };
+const rnd=n=>crypto.getRandomValues(new Uint8Array(n));
+const importDek=raw=>crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+async function wrapBytes(kek,raw){ const iv=rnd(12); return {iv:b64(iv),ct:b64(await crypto.subtle.encrypt({name:'AES-GCM',iv},kek,raw))}; }
+async function unwrapBytes(kek,w){ return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(w.iv)},kek,unb64(w.ct))); }
+function newRecoveryCode(){ const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', r=rnd(24); let s=''; for(const x of r) s+=A[x%32]; return s.match(/.{4}/g).join('-'); }
+const normRc=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const redirectUrl=()=>location.origin+location.pathname;
+const lastEmail=()=>{ try{ return localStorage.getItem('danaes.lastemail')||''; }catch(e){ return ''; } };
+function sbErr(e){ const m=String(e&&(e.message||e.error_description||e)||''); if(/Invalid login/i.test(m)) return 'Email atau kata sandi salah.'; if(/Email not confirmed/i.test(m)) return 'Email belum dikonfirmasi. Buka tautan konfirmasi yang dikirim ke email Anda.';
+  if(/SIGNUP_CLOSED|Database error saving new user/i.test(m)) return 'Pendaftaran ditolak: pendaftaran mandiri ditutup, atau nama pengguna sudah dipakai.'; if(/already registered|already been registered/i.test(m)) return 'Email ini sudah terdaftar. Silakan masuk.';
+  if(/SUPER_PROTECTED/.test(m)) return 'Super admin tidak dapat dihapus atau diubah perannya.'; if(/FORBIDDEN/.test(m)) return 'Hanya admin yang dapat melakukan ini.'; if(/SELF/.test(m)) return 'Hapus akun sendiri lewat Bagan Akun → Keamanan akun.';
+  if(/rate limit|security purposes/i.test(m)) return 'Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.'; if(/Failed to fetch|NetworkError/i.test(m)) return 'Tidak dapat terhubung ke server. Periksa koneksi internet.';
+  if(/relation .* does not exist|schema cache/i.test(m)) return 'Tabel database belum dibuat. Jalankan file supabase-setup.sql di SQL Editor Supabase.'; return m||'Terjadi kesalahan.'; }
+async function sbInit(){ if(SB) return SB; await loadScript(SB_JS); const c=cloudCfg();
+  SB=window.supabase.createClient(c.url,c.key,{auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit'}});
+  SB.auth.onAuthStateChange(ev=>{ if(ev==='PASSWORD_RECOVERY'){ RECOVERY=true; cloudAuthView('newpw','Buat kata sandi baru untuk akun Anda.','info'); } }); return SB; }
+function profToAcct(p,u){ return {id:p.id,name:p.full_name||u.email,user:p.username||u.email,email:u.email,role:p.role==='user'?'user':'admin',super:p.role==='super',created:p.created_at,lastLogin:p.last_login}; }
+async function cloudUnlock(user,pw){
+  const {data:prof,error:pe}=await SB.from('profiles').select('*').eq('id',user.id).maybeSingle(); if(pe) throw pe;
+  if(!prof) throw new Error('Profil akun tidak ditemukan. Pastikan supabase-setup.sql sudah dijalankan sebelum akun dibuat.');
+  SB.from('profiles').update({last_login:new Date().toISOString()}).eq('id',user.id).then(()=>{});
+  const acct=profToAcct(prof,user);
+  const {data:row,error:ve}=await SB.from('vaults').select('kdf,data,version').eq('user_id',user.id).maybeSingle(); if(ve) throw ve;
+  if(!row){
+    const raw=rnd(32), salt=rnd(16), rsalt=rnd(16), rc=newRecoveryCode();
+    const kdf={v:1,iter:ITER,salt:b64(salt),wpw:await wrapBytes(await deriveKey(pw,salt,ITER),raw),rsalt:b64(rsalt),wrc:await wrapBytes(await deriveKey(normRc(rc),rsalt,ITER),raw)};
+    const dek=await importDek(raw), init=blank(); init.owner=(prof.full_name||'').toUpperCase();
+    const {error}=await SB.from('vaults').insert({user_id:user.id,kdf,data:await encObj(dek,init),version:1}); if(error) throw error;
+    return {acct,dek,raw,data:init,version:1,kdf,newRc:rc};
+  }
+  try{ const raw=await unwrapBytes(await deriveKey(pw,unb64(row.kdf.salt),row.kdf.iter),row.kdf.wpw); const dek=await importDek(raw);
+    return {acct,dek,raw,data:await decObj(dek,row.data),version:row.version,kdf:row.kdf}; }
+  catch(e){ return {acct,needRc:true,row,pw}; }
+}
+async function cloudRecover(ctx,rc){
+  const raw=await unwrapBytes(await deriveKey(normRc(rc),unb64(ctx.row.kdf.rsalt),ctx.row.kdf.iter),ctx.row.kdf.wrc);
+  const salt=rnd(16), kdf=Object.assign({},ctx.row.kdf,{iter:ITER,salt:b64(salt),wpw:await wrapBytes(await deriveKey(ctx.pw,salt,ITER),raw)});
+  const {error}=await SB.from('vaults').update({kdf}).eq('user_id',ctx.acct.id); if(error) throw error;
+  const dek=await importDek(raw); return {acct:ctx.acct,dek,raw,data:await decObj(dek,ctx.row.data),version:ctx.row.version,kdf};
+}
+function cloudEnter(r){ enterApp(r.acct,r.dek,r.data,{cloud:true,raw:r.raw,version:r.version,kdf:r.kdf}); setSync('ok'); }
+function setSync(st){ SYNC=st; const el=document.getElementById('syncSt'); if(el) el.outerHTML=syncHtml(); }
+function syncHtml(){ if(!SESSION||!SESSION.cloud) return '<span id="syncSt" hidden></span>'; const M={ok:['p-mint','Tersimpan di cloud'],saving:['p-sky','Menyimpan…'],err:['p-peach','Gagal tersimpan'],conflict:['p-cream','Disinkronkan']}[SYNC]||['p-mint','Tersimpan'];
+  return `<span id="syncSt" class="tag ${M[0]}" style="margin:0;padding:4px 10px" title="Server: ${esc(sbHost())}">${M[1]}</span>`; }
+async function persistCloud(){ if(SAVING) return; SAVING=true;
+  try{ while(PENDING&&SESSION&&SESSION.cloud){ PENDING=false; const sess=SESSION; setSync('saving'); const blob=await encObj(sess.key,S);
+      const {data,error}=await SB.from('vaults').update({data:blob,version:sess.version+1,updated_at:new Date().toISOString()}).eq('user_id',sess.acct.id).eq('version',sess.version).select('version');
+      if(SESSION!==sess) break;
+      if(error){ setSync('err'); toast('Gagal menyimpan ke server: '+sbErr(error)+' Perubahan akan dicoba lagi.'); PENDING=true; setTimeout(()=>{ if(PENDING) persistCloud(); },8000); break; }
+      if(!data||!data.length){ PENDING=false; await cloudPull(true); break; }
+      sess.version=data[0].version; setSync('ok'); }
+  } finally{ SAVING=false; } }
+async function cloudPull(conflict){ const sess=SESSION; if(!sess||!sess.cloud) return;
+  const {data:row,error}=await SB.from('vaults').select('data,version').eq('user_id',sess.acct.id).maybeSingle(); if(error||!row||SESSION!==sess) return;
+  if(row.version===sess.version&&!conflict) return;
+  try{ S=Object.assign(blank(),await decObj(sess.key,row.data)); sess.version=row.version; _ent=null; _acc=null; _gaps=null; afterLoad(); render(); setSync(conflict?'conflict':'ok');
+    toast(conflict?'Data diperbarui dari perangkat lain. Perubahan terakhir di perangkat ini belum tersimpan, silakan ulangi.':'Data disinkronkan dari perangkat lain.'); }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&SESSION&&SESSION.cloud&&!SAVING&&!PENDING&&!saveT) cloudPull(false); });
+
+function cloudAuthView(mode,msg,kind){
+  const auth=document.getElementById('auth'); document.getElementById('app').hidden=true; auth.hidden=false;
+  if(!mode) mode='login'; if(mode==='signup'&&!CLOUD_OPEN) mode='login';
+  const m=msg?`<div class="auth-msg ${kind||'err'}">${esc(msg)}</div>`:'';
+  const tabs=(mode==='login'||mode==='signup')?`<div class="auth-tabs" role="tablist"><button role="tab" data-act="cauthtab" data-m="login" aria-selected="${mode==='login'}">Masuk</button>${CLOUD_OPEN?`<button role="tab" data-act="cauthtab" data-m="signup" aria-selected="${mode==='signup'}">Buat akun</button>`:''}</div>`:'';
+  let body='';
+  if(mode==='login') body=`<form id="cLoginForm">${m}
+    <div class="field"><label for="cEmail">Email</label><input class="inp" id="cEmail" type="email" autocomplete="email" autocapitalize="none" required value="${esc(lastEmail())}"></div>
+    <div class="field"><label for="cPass">Kata sandi</label><input class="inp" id="cPass" type="password" autocomplete="current-password" required></div>
+    <button class="btn pri" type="submit" id="cBtn">Masuk</button><button type="button" class="btn" data-act="cmode" data-m="forgot" style="justify-content:center">Lupa kata sandi?</button>
+    ${CLOUD_OPEN?'':'<p class="small muted">Pendaftaran akun baru ditutup. Minta admin membuatkan akun untuk Anda.</p>'}</form>`;
+  else if(mode==='signup') body=`<form id="cSignupForm">${m}
+    <div class="field"><label for="csName">Nama lengkap (sesuai rekening)</label><input class="inp" id="csName" autocomplete="name" required></div>
+    <div class="field"><label for="csUser">Nama pengguna</label><input class="inp" id="csUser" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="huruf kecil, angka, titik"></div>
+    <div class="field"><label for="csEmail">Email</label><input class="inp" id="csEmail" type="email" autocomplete="email" autocapitalize="none" required></div>
+    <div class="field"><label for="csPass">Kata sandi (minimal 8 karakter)</label><input class="inp" id="csPass" type="password" autocomplete="new-password" minlength="8" required></div>
+    <div class="field"><label for="csPass2">Ulangi kata sandi</label><input class="inp" id="csPass2" type="password" autocomplete="new-password" minlength="8" required></div>
+    <button class="btn pri" type="submit" id="cBtn">Buat akun</button></form>`;
+  else if(mode==='forgot') body=`<form id="cForgotForm"><h3 style="margin:0">Atur ulang kata sandi</h3>${m}
+    <p class="small muted" style="margin:0">Kami kirim tautan ke email Anda. Setelah membuat kata sandi baru, Anda perlu memasukkan <b>kode pemulihan</b> untuk membuka data.</p>
+    <div class="field"><label for="cfEmail">Email</label><input class="inp" id="cfEmail" type="email" autocomplete="email" required value="${esc(lastEmail())}"></div>
+    <button class="btn pri" type="submit" id="cBtn">Kirim tautan</button><button type="button" class="btn" data-act="cmode" data-m="login" style="justify-content:center">Kembali ke Masuk</button></form>`;
+  else if(mode==='newpw') body=`<form id="cNewPwForm"><h3 style="margin:0">Kata sandi baru</h3>${m}
+    <div class="field"><label for="cnPass">Kata sandi baru (minimal 8 karakter)</label><input class="inp" id="cnPass" type="password" autocomplete="new-password" minlength="8" required></div>
+    <div class="field"><label for="cnPass2">Ulangi kata sandi baru</label><input class="inp" id="cnPass2" type="password" autocomplete="new-password" minlength="8" required></div>
+    <button class="btn pri" type="submit" id="cBtn">Simpan kata sandi</button></form>`;
+  else if(mode==='recover') body=`<form id="cRecoverForm"><h3 style="margin:0">Masukkan kode pemulihan</h3>${m}
+    <p class="small muted" style="margin:0">Kata sandi akun ini sudah diganti sejak data terakhir dikunci. Masukkan kode pemulihan 24 karakter yang Anda simpan saat pertama kali masuk.</p>
+    <div class="field"><label for="crCode">Kode pemulihan</label><input class="inp" id="crCode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" required></div>
+    <button class="btn pri" type="submit" id="cBtn">Buka data</button><button type="button" class="btn" data-act="clogout" style="justify-content:center">Batal</button></form>`;
+  else if(mode==='showrc') body=`<div style="display:flex;flex-direction:column;gap:12px"><h3 style="margin:0">Simpan kode pemulihan Anda</h3>
+    <p class="small muted" style="margin:0">Kode ini satu-satunya cara membuka data jika Anda lupa kata sandi. Simpan di tempat aman, misalnya dicatat di kertas atau pengelola kata sandi. Kode tidak akan ditampilkan lagi.</p>
+    <div style="font:700 17px/1.4 ui-monospace,Menlo,monospace;letter-spacing:.04em;background:var(--p-cream);color:#3d2f08;border-radius:14px;padding:14px;text-align:center;user-select:all" id="rcBox">${esc(CTX.newRc)}</div>
+    <button class="btn" data-act="copyrc" style="justify-content:center">Salin kode</button>
+    <label class="chk"><input type="checkbox" id="rcOk"> Saya sudah menyimpan kode pemulihan ini</label>
+    <button class="btn pri" data-act="rcdone" style="justify-content:center">Lanjut ke aplikasi</button></div>`;
+  auth.innerHTML=`<div class="auth-card"><div class="alogo">D</div><h1>Dana e-Statement</h1><p class="sub">Pembukuan pribadi dari rekening koran</p>${tabs}${body}
+  <p class="auth-note">Tersambung ke server <b>${esc(sbHost())}</b>. Data dienkripsi AES-256 di browser sebelum dikirim, jadi server hanya menyimpan data terenkripsi.${cloudCfg().src==='local'?' <a href="#" data-act="cloudoff">Kembali ke mode lokal</a>':''}</p></div>`;
+  const f=auth.querySelector('input:not([type=checkbox])'); if(f) setTimeout(()=>{ const p=document.getElementById('cPass'); (mode==='login'&&lastEmail()&&p?p:f).focus(); },30);
+}
+function busy(t){ const b=document.getElementById('cBtn'); if(b){ b.disabled=true; b.innerHTML='<span class="spin"></span> '+t; } }
+async function cloudAfterUnlock(r,msgNew){ if(r.needRc){ CTX=r; cloudAuthView('recover'); return; } if(r.newRc){ CTX=r; cloudAuthView('showrc'); return; } cloudEnter(r); if(msgNew) toast(msgNew); }
+async function cDoLogin(){ if(Date.now()<lockUntil){ cloudAuthView('login',`Terlalu banyak percobaan. Coba lagi dalam ${Math.ceil((lockUntil-Date.now())/1000)} detik.`); return; }
+  const email=$v('cEmail').trim(), pw=$v('cPass'); busy('Memeriksa…'); try{ localStorage.setItem('danaes.lastemail',email); }catch(e){}
+  try{ const {data,error}=await SB.auth.signInWithPassword({email,password:pw}); if(error) throw error; fails=0; await cloudAfterUnlock(await cloudUnlock(data.user,pw)); }
+  catch(e){ fails++; if(fails>=5){ lockUntil=Date.now()+30000; fails=0; } try{ await SB.auth.signOut(); }catch(_){} cloudAuthView('login',sbErr(e)); } }
+async function cDoSignup(){ const name=$v('csName').trim(), u=$v('csUser').trim().toLowerCase(), email=$v('csEmail').trim(), p1=$v('csPass'), p2=$v('csPass2');
+  const keep=()=>{ [['csName',name],['csUser',u],['csEmail',email]].forEach(([i,v])=>{ const el=document.getElementById(i); if(el) el.value=v; }); };
+  const err=m=>{ cloudAuthView('signup',m); keep(); };
+  if(!name) return err('Isi nama lengkap.'); if(!/^[a-z0-9._-]{3,32}$/.test(u)) return err('Nama pengguna 3–32 karakter: huruf kecil, angka, titik, garis bawah, atau tanda hubung.');
+  if(p1.length<8) return err('Kata sandi minimal 8 karakter.'); if(p1!==p2) return err('Ulangan kata sandi tidak sama.');
+  busy('Membuat akun…');
+  try{ const {data:ok}=await SB.rpc('username_available',{u}); if(ok===false) return err('Nama pengguna sudah dipakai.');
+    const {data,error}=await SB.auth.signUp({email,password:p1,options:{data:{full_name:name,username:u},emailRedirectTo:redirectUrl()}}); if(error) throw error;
+    try{ localStorage.setItem('danaes.lastemail',email); }catch(e){}
+    if(!data.session){ cloudAuthView('login','Akun dibuat. Buka email konfirmasi yang kami kirim ke '+email+', klik tautannya, lalu masuk di sini.','info'); return; }
+    await cloudAfterUnlock(await cloudUnlock(data.user,p1),'Akun dibuat. Selamat datang, '+name+'.'); }
+  catch(e){ err(sbErr(e)); } }
+async function cDoForgot(){ const email=$v('cfEmail').trim(); busy('Mengirim…');
+  const {error}=await SB.auth.resetPasswordForEmail(email,{redirectTo:redirectUrl()});
+  cloudAuthView(error?'forgot':'login',error?sbErr(error):'Jika email terdaftar, tautan atur ulang kata sandi sudah dikirim. Buka tautan itu di browser ini.',error?'err':'info'); }
+async function cDoNewPw(){ const p1=$v('cnPass'), p2=$v('cnPass2'); if(p1.length<8) return cloudAuthView('newpw','Kata sandi minimal 8 karakter.'); if(p1!==p2) return cloudAuthView('newpw','Ulangan kata sandi tidak sama.');
+  busy('Menyimpan…'); try{ const {data,error}=await SB.auth.updateUser({password:p1}); if(error) throw error; RECOVERY=false; history.replaceState(null,'',redirectUrl()); await cloudAfterUnlock(await cloudUnlock(data.user,p1)); }
+  catch(e){ cloudAuthView('newpw',sbErr(e)); } }
+async function cDoRecover(){ const rc=$v('crCode'); busy('Membuka…'); try{ const r=await cloudRecover(CTX,rc); CTX=null; cloudEnter(r); toast('Data berhasil dibuka dan dikunci ulang dengan kata sandi baru.'); }
+  catch(e){ cloudAuthView('recover','Kode pemulihan salah. Periksa kembali, huruf besar/kecil dan tanda hubung tidak berpengaruh.'); } }
+async function cloudLogout(msg){ if(SESSION&&SESSION.cloud){ clearTimeout(saveT); saveT=null; if(PENDING) await persistCloud(); } SESSION=null; S=blank(); _ent=null; _acc=null; _gaps=null; U.restore=null; U.pending=[]; U.adm=null; setNav(false);
+  try{ await SB.auth.signOut(); }catch(e){} cloudAuthView('login',msg||'Anda sudah keluar.','info'); }
+async function cChangePassword(){ const o=$v('cpOld'), n1=$v('cpNew'), n2=$v('cpNew2');
+  if(n1.length<8){ toast('Kata sandi baru minimal 8 karakter.'); return; } if(n1!==n2){ toast('Ulangan kata sandi baru tidak sama.'); return; }
+  const {error:e1}=await SB.auth.signInWithPassword({email:SESSION.acct.email,password:o}); if(e1){ toast('Kata sandi lama salah.'); return; }
+  const {error:e2}=await SB.auth.updateUser({password:n1}); if(e2){ toast(sbErr(e2)); return; }
+  const salt=rnd(16), kdf=Object.assign({},SESSION.kdf,{iter:ITER,salt:b64(salt),wpw:await wrapBytes(await deriveKey(n1,salt,ITER),SESSION.raw)});
+  const {error:e3}=await SB.from('vaults').update({kdf}).eq('user_id',SESSION.acct.id); if(e3){ toast('Kata sandi akun diganti, tetapi kunci data gagal diperbarui. Saat masuk berikutnya, masukkan kode pemulihan.'); return; }
+  SESSION.kdf=kdf; render(); toast('Kata sandi diganti untuk semua perangkat.'); }
+async function cRegenRc(){ const rc=newRecoveryCode(), rsalt=rnd(16); const kdf=Object.assign({},SESSION.kdf,{rsalt:b64(rsalt),wrc:await wrapBytes(await deriveKey(normRc(rc),rsalt,ITER),SESSION.raw)});
+  const {error}=await SB.from('vaults').update({kdf}).eq('user_id',SESSION.acct.id); if(error){ toast(sbErr(error)); return; } SESSION.kdf=kdf; U.newRc=rc; render(); toast('Kode pemulihan baru dibuat. Kode lama tidak berlaku lagi.'); }
+async function cDeleteOwn(){ const {error}=await SB.rpc('delete_own_account'); if(error){ toast(sbErr(error)); render(); return; } SESSION=null; S=blank(); try{ await SB.auth.signOut(); }catch(e){} cloudAuthView('login','Akun dan seluruh datanya telah dihapus dari server.','info'); }
+async function cMigrateLocal(el){ const u=$v('mgUser').trim().toLowerCase(), pw=$v('mgPass'); const acct=accounts().find(a=>a.user===u); if(!acct){ toast('Akun lokal dengan nama pengguna itu tidak ditemukan di browser ini.'); return; }
+  let data; try{ const key=await deriveKey(pw,unb64(acct.salt),acct.iter); data=await decObj(key,JSON.parse(localStorage.getItem(DATA_KEY+acct.id))); }catch(e){ toast('Kata sandi akun lokal salah.'); return; }
+  const n=(data.txns||[]).length; if(!el.classList.contains('armed')){ el.classList.add('armed'); el.textContent=`Klik lagi: ganti data cloud (${S.txns.length} transaksi) dengan data lokal (${n} transaksi)`; return; }
+  S=Object.assign(blank(),data); _acc=null; afterLoad(); changed(); render(); toast(n+' transaksi dari akun lokal dipindahkan ke cloud.'); }
+// ---- admin (cloud) ----
+async function loadAdmin(){ if(U.admLoading) return; U.admLoading=true;
+  const [r1,r2]=await Promise.all([SB.rpc('admin_list_users'),SB.from('app_settings').select('open_signup').eq('id',1).maybeSingle()]); U.admLoading=false;
+  U.adm=r1.error?{err:sbErr(r1.error),users:[]}:{users:r1.data||[],open:r2.data?r2.data.open_signup:true}; if(r2.data) CLOUD_OPEN=r2.data.open_signup; if(U.view==='daftar-akun') render(); }
+function vDaftarCloud(){
+  if(!isAdmin()) return `<div class="sheet empty"><div class="h2">Khusus admin</div><p>Halaman ini hanya dapat dibuka oleh akun admin.</p></div>`;
+  if(!U.adm){ loadAdmin(); return `<div class="sheet empty"><span class="spin"></span> Memuat daftar akun dari server…</div>`; }
+  if(U.adm.err) return `<div class="sheet empty"><div class="h2">Gagal memuat</div><p>${esc(U.adm.err)}</p><button class="btn" data-act="admreload">Coba lagi</button></div>`;
+  const us=U.adm.users, na=us.filter(a=>a.role!=='user').length;
+  return `<div class="sheet"><div class="headrow"><div><h2 class="h2">Daftar akun</h2><p class="lede">${us.length} akun terdaftar di server ${esc(sbHost())}, ${na} di antaranya admin. Admin dapat menambah, mengubah peran, mengirim tautan atur ulang kata sandi, dan menghapus akun. Isi pembukuan setiap akun tetap terenkripsi dan tidak dapat dibuka admin.</p></div><button class="btn" data-act="admreload">Muat ulang</button></div>
+  <div class="tw"><table class="data"><thead><tr><th>Nama</th><th>Email</th><th>Nama pengguna</th><th>Peran</th><th>Dibuat</th><th>Terakhir masuk</th><th class="num">Data</th><th></th></tr></thead><tbody>
+  ${us.map(a=>{ const self=a.id===SESSION.acct.id, sup=a.role==='super'; return `<tr><td>${esc(a.full_name)}${self?'<span class="tag pair">Anda</span>':''}</td><td class="small">${esc(a.email)}${a.email_confirmed?'':'<span class="tag rv">belum konfirmasi</span>'}</td><td class="small">${esc(a.username||'–')}</td>
+   <td>${sup?'<span class="tag rv">Super admin</span>':a.role==='admin'?'<span class="tag rv">Admin</span>':'<span class="tag">Pengguna</span>'}</td><td class="small">${fdt(a.created_at)}</td><td class="small">${fdt(a.last_login)}</td><td class="num small">${(a.data_bytes/1024).toLocaleString('id-ID',{maximumFractionDigits:1})} KB</td>
+   <td style="white-space:nowrap">${sup?'<span class="small muted">terlindungi</span> ':`<button class="btn sm" data-act="arole" data-id="${a.id}" data-r="${a.role==='admin'?'user':'admin'}">${a.role==='admin'?'Jadikan pengguna':'Jadikan admin'}</button> `}<button class="btn sm" data-act="areset" data-id="${esc(a.email)}">Kirim atur ulang sandi</button> ${self||sup?'':`<button class="btn sm danger" data-act="adel" data-id="${a.id}">Hapus</button>`}</td></tr>`; }).join('')}
+  </tbody></table></div></div>
+  <div class="sheet"><div class="eyebrow">Tambah akun</div><p class="lede small">Akun baru dibuat di server. Jika konfirmasi email aktif, pemilik akun perlu mengklik tautan di emailnya sebelum bisa masuk. Kode pemulihan dibuat saat ia masuk pertama kali.</p>
+  <div class="form" style="margin-top:12px">
+    <div class="field" style="flex:1 1 180px"><label for="acName">Nama lengkap</label><input class="inp" id="acName" autocomplete="off"></div>
+    <div class="field"><label for="acUser">Nama pengguna</label><input class="inp" id="acUser" autocomplete="off" autocapitalize="none" spellcheck="false"></div>
+    <div class="field" style="flex:1 1 200px"><label for="acEmail">Email</label><input class="inp" id="acEmail" type="email" autocomplete="off"></div>
+    <div class="field"><label for="acPass">Kata sandi awal</label><input class="inp" type="password" id="acPass" autocomplete="new-password"></div>
+    <div class="field"><label for="acPass2">Ulangi kata sandi</label><input class="inp" type="password" id="acPass2" autocomplete="new-password"></div>
+    <div class="field"><label for="acRole">Peran</label><select class="inp" id="acRole"><option value="user">Pengguna</option><option value="admin">Admin</option></select></div>
+    <button class="btn pri" data-act="acreate">Buat akun</button>
+  </div></div>
+  <div class="sheet"><div class="eyebrow">Pendaftaran mandiri</div>
+  <label class="chk" style="margin-top:10px"><input type="checkbox" data-chg="opensignup"${U.adm.open?' checked':''}> Izinkan pengunjung membuat akun sendiri dari layar masuk</label>
+  <p class="small muted" style="margin-top:6px">Jika dimatikan, server menolak pendaftaran baru kecuali yang dibuat admin dari halaman ini.</p></div>`;
+}
+async function cAdminRole(id,r){ const {error}=await SB.rpc('admin_set_role',{target:id,new_role:r}); if(error){ toast(sbErr(error)); return; } U.adm=null; render(); toast('Peran diperbarui.'); }
+async function cAdminDelete(id){ const {error}=await SB.rpc('admin_delete_user',{target:id}); if(error){ toast(sbErr(error)); return; } U.adm=null; render(); toast('Akun dan datanya dihapus dari server.'); }
+async function cAdminReset(email){ const {error}=await SB.auth.resetPasswordForEmail(email,{redirectTo:redirectUrl()}); toast(error?sbErr(error):'Tautan atur ulang kata sandi dikirim ke '+email+'.'); }
+async function cAdminCreate(){ const name=$v('acName').trim(), u=$v('acUser').trim().toLowerCase(), email=$v('acEmail').trim(), p1=$v('acPass'), p2=$v('acPass2'), role=$v('acRole')||'user';
+  if(!name||!email){ toast('Isi nama lengkap dan email.'); return; } if(!/^[a-z0-9._-]{3,32}$/.test(u)){ toast('Nama pengguna 3–32 karakter: huruf kecil, angka, titik, garis bawah, atau tanda hubung.'); return; }
+  if(p1.length<8){ toast('Kata sandi minimal 8 karakter.'); return; } if(p1!==p2){ toast('Ulangan kata sandi tidak sama.'); return; }
+  const {data:ok}=await SB.rpc('username_available',{u}); if(ok===false){ toast('Nama pengguna sudah dipakai.'); return; }
+  const {data:tok,error:e1}=await SB.rpc('admin_create_invite',{invite_role:role}); if(e1){ toast(sbErr(e1)); return; }
+  const c=cloudCfg(), side=window.supabase.createClient(c.url,c.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'danaes-admin-side'}});
+  const {data,error}=await side.auth.signUp({email,password:p1,options:{data:{full_name:name,username:u,invite:tok},emailRedirectTo:redirectUrl()}});
+  if(error){ toast(sbErr(error)); return; } try{ await side.auth.signOut(); }catch(e){}
+  U.adm=null; render(); toast(data.session?`Akun ${u} dibuat. Berikan email dan kata sandinya kepada pemilik akun.`:`Akun ${u} dibuat. Email konfirmasi dikirim ke ${email}.`); }
+async function cSetOpen(v){ const {error}=await SB.rpc('admin_set_open_signup',{v}); if(error){ toast(sbErr(error)); return; } CLOUD_OPEN=v; if(U.adm) U.adm.open=v; toast(v?'Pendaftaran mandiri dibuka.':'Pendaftaran mandiri ditutup.'); }
+async function bootCloud(){
+  const auth=document.getElementById('auth'); auth.hidden=false;
+  const h=location.hash, isRec=/type=recovery/.test(h), isSignup=/type=(signup|email|invite)/.test(h), hashErr=/error_description=([^&]+)/.exec(h);
+  auth.innerHTML=`<div class="auth-card"><div class="alogo">D</div><h1>Dana e-Statement</h1><p class="sub"><span class="spin"></span> ${isRec?'Memproses tautan atur ulang…':'Menghubungkan ke server…'}</p></div>`;
+  try{ await sbInit(); }catch(e){ auth.innerHTML=`<div class="auth-card"><div class="alogo">D</div><h1>Dana e-Statement</h1><p class="auth-msg err">Pustaka Supabase gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.</p></div>`; return; }
+  try{ const {data,error}=await SB.from('app_settings').select('open_signup').eq('id',1).maybeSingle(); if(error) throw error; CLOUD_OPEN=data?data.open_signup:true; }
+  catch(e){ cloudAuthView('login',sbErr(e)); return; }
+  if(isRec){ setTimeout(()=>{ if(!RECOVERY) cloudAuthView('forgot','Tautan atur ulang sudah kedaluwarsa atau sudah dipakai. Kirim ulang tautan.'); },6000); return; }
+  if(isSignup){ try{ await SB.auth.signOut(); }catch(e){} history.replaceState(null,'',redirectUrl()); cloudAuthView('login','Email terkonfirmasi. Silakan masuk.','info'); return; }
+  if(hashErr){ history.replaceState(null,'',redirectUrl()); cloudAuthView('login',decodeURIComponent(hashErr[1].replace(/\+/g,' '))); return; }
+  cloudAuthView('login');
+}
+function cloudSetupHtml(){ if(!STANDALONE) return ''; return `<details class="more" style="margin-top:14px"><summary class="small">Hubungkan ke server Supabase</summary>
+  <p class="small muted">Isi dari Supabase → Project Settings → API. Pengaturan ini hanya untuk browser ini; agar berlaku di semua perangkat, isi di bagian atas file index.html.</p>
+  <div class="field" style="margin-top:8px"><label for="cfgUrl">Project URL</label><input class="inp" id="cfgUrl" placeholder="https://xxxx.supabase.co" autocomplete="off"></div>
+  <div class="field" style="margin-top:8px"><label for="cfgKey">Anon public key</label><input class="inp" id="cfgKey" placeholder="eyJhbGciOi…" autocomplete="off"></div>
+  <button class="btn pri" data-act="cloudon" style="margin-top:10px">Hubungkan</button></details>`; }
+
 function bootAuth(){
   if(!(window.crypto&&crypto.subtle)){ document.getElementById('auth').innerHTML='<div class="auth-card"><h1>Dana e-Statement</h1><p class="auth-msg err">Browser ini tidak mendukung enkripsi. Buka situs lewat alamat https dengan browser terbaru.</p></div>'; return; }
-  seedAccount();
-  showAuth(null);
+  CLOUD=STANDALONE&&!!cloudCfg();
+  if(CLOUD) bootCloud(); else { seedAccount(); showAuth(null); }
   ['pointerdown','keydown','wheel','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{ lastAct=Date.now(); },{passive:true}));
   setInterval(()=>{ if(SESSION&&Date.now()-lastAct>IDLE_MIN*60000) logout('Sesi dikunci otomatis setelah '+IDLE_MIN+' menit tidak aktif.'); },20000);
 }
-document.addEventListener('submit',ev=>{ ev.preventDefault(); if(ev.target.id==='loginForm') doLogin(); else if(ev.target.id==='signupForm') doSignup(); });
+document.addEventListener('submit',ev=>{ ev.preventDefault(); const i=ev.target.id; if(i==='loginForm') doLogin(); else if(i==='signupForm') doSignup(); else if(i==='cLoginForm') cDoLogin(); else if(i==='cSignupForm') cDoSignup(); else if(i==='cForgotForm') cDoForgot(); else if(i==='cNewPwForm') cDoNewPw(); else if(i==='cRecoverForm') cDoRecover(); });
 document.getElementById('side').addEventListener('click',ev=>{ if(ev.target.closest('a[href^="#"]')) setNav(false); });
 document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'&&document.getElementById('side').classList.contains('open')) setNav(false); });
 window.addEventListener('hashchange',route);
